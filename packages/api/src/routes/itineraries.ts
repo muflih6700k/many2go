@@ -3,7 +3,7 @@ import { body, query } from 'express-validator';
 import { prisma } from '../config/prisma';
 import { authenticate, requireRole } from '../middleware/jwt';
 import { validate } from '../middleware/validate';
-import { ItineraryStatus } from '@many2go/shared';
+import { ItineraryStatus } from '../types';
 import { generateItineraryPDF } from '../services/pdfService';
 
 const router = express.Router();

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
-import { JwtPayload } from '@many2go/shared';
+import { JwtPayload } from '../types';
 
 export interface AuthenticatedRequest extends Request {
   user?: JwtPayload;

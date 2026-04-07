@@ -3,7 +3,7 @@ import { body, query } from 'express-validator';
 import { prisma } from '../config/prisma';
 import { authenticate, requireRole } from '../middleware/jwt';
 import { validate } from '../middleware/validate';
-import { BookingStatus } from '@many2go/shared';
+import { BookingStatus } from '../types';
 
 const router = express.Router();
 router.use(authenticate);

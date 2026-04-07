@@ -5,7 +5,7 @@ import { body } from 'express-validator';
 import { prisma } from '../config/prisma';
 import { env } from '../config/env';
 import { validate } from '../middleware/validate';
-import { UserRole } from '@many2go/shared';
+import { UserRole } from '../types';
 
 const router = express.Router();
 

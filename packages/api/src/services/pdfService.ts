@@ -3,12 +3,8 @@ import { prisma } from '../config/prisma';
 import { promises as fs } from 'fs';
 import { createWriteStream } from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const UPLOADS_DIR = path.join(__dirname, '../../uploads/pdfs');
+const UPLOADS_DIR = path.join(process.cwd(), 'uploads/pdfs');
 
 // Ensure uploads directory exists
 async function ensureUploadsDir() {
@@ -63,7 +59,7 @@ export async function generateItineraryPDF(itineraryId: string): Promise<string>
       throw new Error('Itinerary has no associated user');
     }
 
-    const days = itinerary.days || [];
+    const days = (itinerary.days as any[]) || [];
     const customerName = itinerary.user.name || itinerary.user.email;
     const tripTitle = itinerary.title || 'Untitled Trip';
     const today = new Date().toLocaleDateString('en-US', {

@@ -3,8 +3,9 @@ import { body, query } from 'express-validator';
 import { prisma } from '../config/prisma';
 import { authenticate, requireRole } from '../middleware/jwt';
 import { validate } from '../middleware/validate';
-import { ItineraryStatus } from '../types';
 import { generateItineraryPDF } from '../services/pdfService';
+
+const ItineraryStatusValues = ['DRAFT', 'SUBMITTED', 'CONFIRMED', 'COMPLETED'];
 
 const router = express.Router();
 router.use(authenticate);
@@ -99,7 +100,7 @@ router.patch(
   '/:id',
   validate([
     body('title').optional().trim(),
-    body('status').optional().isIn(Object.values(ItineraryStatus)),
+    body('status').optional().isIn(ItineraryStatusValues),
     body('pdfUrl').optional().trim(),
   ]),
   async (req, res) => {

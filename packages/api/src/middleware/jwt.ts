@@ -3,6 +3,14 @@ import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
 import { JwtPayload } from '../types';
 
+declare global {
+  namespace Express {
+    interface Request {
+      user?: { userId: string; role: string; }
+    }
+  }
+}
+
 export interface AuthenticatedRequest extends Request {
   user?: JwtPayload;
 }

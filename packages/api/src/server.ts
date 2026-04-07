@@ -6,7 +6,6 @@ import cookieParser from 'cookie-parser';
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { env } from './config/env';
 import { prisma } from './config/prisma';
 import { socketHandler } from './socket/handler';
@@ -22,8 +21,7 @@ import messageRoutes from './routes/messages';
 import reminderRoutes from './routes/reminders';
 import revenueRoutes from './routes/revenue';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = path.join(process.cwd(), 'packages/api/src');
 
 const app = express();
 const httpServer = createServer(app);

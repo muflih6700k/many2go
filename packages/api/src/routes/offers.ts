@@ -18,7 +18,7 @@ router.get(
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
-      const showActiveOnly = req.query.active !== false;
+      const showActiveOnly = req.query.active !== undefined ? req.query.active : true;
       const skip = (page - 1) * limit;
 
       const where: any = {};

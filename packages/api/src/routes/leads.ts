@@ -3,7 +3,7 @@ import { body, query } from 'express-validator';
 import { prisma } from '../config/prisma';
 import { authenticate, requireRole } from '../middleware/jwt';
 import { validate } from '../middleware/validate';
-import { LeadStatus } from '../types';
+const LeadStatusValues = ['NEW', 'CONTACTED', 'QUOTED', 'BOOKED', 'CLOSED'];
 
 const router = express.Router();
 
@@ -44,14 +44,14 @@ router.get(
   validate([
     query('page').optional().isInt({ min: 1 }).toInt(),
     query('limit').optional().isInt({ max: 100 }).toInt(),
-    query('status').optional().isIn(Object.values(LeadStatus)),
+    query('status').optional().isIn(LeadStatusValues),
   ]),
   async (req, res) => {
     try {
       const { user } = req;
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
-      const status = req.query.status as LeadStatus | undefined;
+      const status = req.query.status as string | undefined;
       const skip = (page - 1) * limit;
 
       // Build where clause based on role
@@ -102,7 +102,7 @@ router.patch(
   '/:id',
   requireRole('AGENT', 'ADMIN'),
   validate([
-    body('status').optional().isIn(Object.values(LeadStatus)),
+    body('status').optional().isIn(LeadStatusValues),
     body('agentId').optional().isUUID(),
     body('notes').optional().trim(),
   ]),

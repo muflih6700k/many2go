@@ -40,7 +40,7 @@ router.post(
           name,
           email,
           passwordHash,
-          role: role || UserRole.CUSTOMER,
+          role: role || 'CUSTOMER',
         },
         select: {
           id: true,

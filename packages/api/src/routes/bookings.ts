@@ -3,7 +3,7 @@ import { body, query } from 'express-validator';
 import { prisma } from '../config/prisma';
 import { authenticate, requireRole } from '../middleware/jwt';
 import { validate } from '../middleware/validate';
-import { BookingStatus } from '../types';
+const BookingStatusValues = ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'];
 
 const router = express.Router();
 router.use(authenticate);
@@ -55,14 +55,14 @@ router.get(
   validate([
     query('page').optional().isInt({ min: 1 }).toInt(),
     query('limit').optional().isInt({ max: 100 }).toInt(),
-    query('status').optional().isIn(Object.values(BookingStatus)),
+    query('status').optional().isIn(BookingStatusValues),
   ]),
   async (req, res) => {
     try {
       const { user } = req;
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
-      const status = req.query.status as BookingStatus | undefined;
+      const status = req.query.status as string | undefined;
       const skip = (page - 1) * limit;
 
       const where: any = {};
@@ -115,7 +115,7 @@ router.patch(
   '/:id',
   requireRole('ADMIN', 'AGENT'),
   validate([
-    body('status').optional().isIn(Object.values(BookingStatus)),
+    body('status').optional().isIn(BookingStatusValues),
     body('paidAmount').optional().isFloat({ min: 0 }),
   ]),
   async (req, res) => {

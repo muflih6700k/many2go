@@ -1,0 +1,7 @@
+{
+  "name": "@many2go/shared",
+  "version": "1.0.0",
+  "description": "Shared types and utilities for MANY2GO",
+  "main": "src/index.ts",
+  "types": "src/index.ts"
+}

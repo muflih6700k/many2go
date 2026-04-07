@@ -21,8 +21,6 @@ import messageRoutes from './routes/messages';
 import reminderRoutes from './routes/reminders';
 import revenueRoutes from './routes/revenue';
 
-const __dirname = path.join(process.cwd(), 'packages/api/src');
-
 const app = express();
 const httpServer = createServer(app);
 const io = new SocketIOServer(httpServer, {

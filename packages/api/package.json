@@ -2,6 +2,7 @@
   "name": "@many2go/api",
   "version": "1.0.0",
   "description": "MANY2GO Express.js API - Single source of truth",
+  "type": "commonjs",
   "main": "./dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",

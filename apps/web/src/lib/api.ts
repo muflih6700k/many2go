@@ -161,8 +161,8 @@ export const usersApi = {
   deactivate: (id: string) => api.patch(`/api/users/${id}/deactivate`),
 };
 
-// Export individual APIs
-export { api as default, authApi, leadsApi, itinerariesApi, bookingsApi, offersApi, messages, remindersApi, revenueApi, usersApi };
+// Export default API instance
+export { api as default };
 
 // Import types
 import type { Lead, Booking, Offer, Itinerary, Message, Reminder, Revenue, User } from '@/types';

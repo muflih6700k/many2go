@@ -19,14 +19,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
  // Check localStorage on mount
  useEffect(() => {
+ const storedUser = localStorage.getItem('user');
  const token = localStorage.getItem('accessToken');
  
+ if (storedUser && token) {
+ // Set user from localStorage immediately to avoid redirect loop
+ setUser(JSON.parse(storedUser));
+ }
+ 
+ // Don't set loading false until we verify with API
  if (!token) {
  setIsLoading(false);
  return;
  }
  
- // Try to verify token with API, fallback to localStorage on failure
+ // Try to verify token with API
  const verifyAuth = async () => {
  try {
  const response = await authApi.me();

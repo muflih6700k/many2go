@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-hot-toast';
-import { Eye, EyeOff, Travel2 } from 'lucide-react';
+import { Eye, EyeOff, Plane } from 'lucide-react';
 import type { Role } from '@/types';
 
 export function Register() {
@@ -54,7 +54,7 @@ export function Register() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-600 rounded-2xl shadow-lg mb-4">
-            <Travel2 className="w-8 h-8 text-white" />
+            <Plane className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">MANY2GO</h1>
           <p className="text-gray-500 mt-1">Create your account</p>

@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usersApi, messages as messagesApi } from '@/lib/api';
 import { PageHeader } from '@/components/PageHeader';
 import toast from 'react-hot-toast';
-import { PaperPlane, Circle, User } from 'lucide-react';
+import { Send, Circle, User } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -160,7 +160,7 @@ export default function Chat() {
           {allMessages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-gray-400">
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                <PaperPlane className="w-6 h-6 text-gray-300" />
+                <Send className="w-6 h-6 text-gray-300" />
               </div>
               <p className="text-sm">No messages yet</p>
               <p className="text-sm mt-1">Send a message to start chatting</p>
@@ -230,7 +230,7 @@ export default function Chat() {
               disabled={!inputValue.trim() || !isConnected}
               className="w-10 h-10 bg-[#0D9488] rounded-full flex items-center justify-center text-white hover:bg-[#0f766e] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              <PaperPlane className="w-5 h-5" />
+              <Send className="w-5 h-5" />
             </button>
           </div>
           {!isConnected && (

@@ -5,7 +5,7 @@ import { messages as messagesApi } from '@/lib/api';
 import { PageHeader } from '@/components/PageHeader';
 import { EmptyState } from '@/components/EmptyState';
 import toast from 'react-hot-toast';
-import { PaperPlane, User, MessageCircle, ChevronLeft } from 'lucide-react';
+import { Send, User, MessageCircle, ChevronLeft } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -331,7 +331,7 @@ export default function AgentChat() {
                     disabled={!inputValue.trim() || !isConnected}
                     className="w-10 h-10 bg-[#0D9488] rounded-full flex items-center justify-center text-white hover:bg-[#0f766e] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    <PaperPlane className="w-5 h-5" />
+                    <Send className="w-5 h-5" />
                   </button>
                 </div>
               </div>

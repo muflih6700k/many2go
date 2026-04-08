@@ -19,49 +19,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
  // Check localStorage on mount
  useEffect(() => {
- const storedUser = localStorage.getItem('user');
  const token = localStorage.getItem('accessToken');
+ const storedUser = localStorage.getItem('user');
  
- if (storedUser && token) {
- // Set user from localStorage immediately to avoid redirect loop
+ if (token && storedUser) {
+ try {
  setUser(JSON.parse(storedUser));
- }
- 
- // Don't set loading false until we verify with API
- if (!token) {
- setIsLoading(false);
- return;
- }
- 
- // Try to verify token with API
- const verifyAuth = async () => {
- try {
- const response = await authApi.me();
- setUser(response.data.data);
- localStorage.setItem('user', JSON.stringify(response.data.data));
- } catch (error) {
- // Token might be expired, try refresh
- try {
- const refreshResponse = await authApi.refresh();
- const newToken = refreshResponse.data.data.accessToken;
- localStorage.setItem('accessToken', newToken);
- 
- // Now get user with new token
- const meResponse = await authApi.me();
- setUser(meResponse.data.data);
- localStorage.setItem('user', JSON.stringify(meResponse.data.data));
- } catch (refreshError) {
- // Refresh failed, clear storage
+ } catch {
  localStorage.removeItem('accessToken');
  localStorage.removeItem('user');
- setUser(null);
  }
- } finally {
+ }
  setIsLoading(false);
- }
- };
- 
- verifyAuth();
  }, []);
 
   const login = async (email: string, password: string) => {

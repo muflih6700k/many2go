@@ -1,22 +1,22 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
-  Dashboard, 
-  Users, 
-  Calendar, 
-  DollarSign,
-  LogOut,
-  Travel2,
-  User,
-  Menu,
-  X,
-  Target,
-  MessageCircle
+ LayoutDashboard, 
+ Users, 
+ Calendar, 
+ DollarSign,
+ LogOut,
+ Plane,
+ User,
+ Menu,
+ X,
+ Target,
+ MessageCircle
 } from 'lucide-react';
 import { useState } from 'react';
 
 const navigation = [
-  { name: 'Dashboard', href: '/agent/dashboard', icon: Dashboard },
+  { name: 'Dashboard', href: '/agent/dashboard', icon: LayoutDashboard },
   { name: 'Leads', href: '/agent/leads', icon: Target },
   { name: 'Customers', href: '/agent/customers', icon: Users },
   { name: 'Chat', href: '/agent/chat', icon: MessageCircle },
@@ -41,7 +41,7 @@ export function AgentLayout({ children }: { children: React.ReactNode }) {
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b px-4 py-3 flex items-center justify-between">
         <Link to="/agent/dashboard" className="flex items-center gap-2">
           <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-            <Travel2 className="w-5 h-5 text-white" />
+            <Plane className="w-5 h-5 text-white" />
           </div>
           <span className="font-bold text-gray-900">MANY2GO</span>
         </Link>
@@ -63,7 +63,7 @@ export function AgentLayout({ children }: { children: React.ReactNode }) {
             {/* Logo */}
             <div className="p-4 border-b hidden lg:flex items-center gap-2">
               <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-                <Travel2 className="w-5 h-5 text-white" />
+                <Plane className="w-5 h-5 text-white" />
               </div>
               <span className="font-bold text-gray-900">MANY2GO</span>
             </div>

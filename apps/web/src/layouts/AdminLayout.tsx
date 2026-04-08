@@ -1,24 +1,24 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
-  Dashboard, 
-  Users, 
-  Target,
-  TicketPercent,
-  LogOut,
-  Travel2,
-  User,
-  Menu,
-  X,
-  Shield
+ LayoutDashboard, 
+ Users, 
+ Target,
+ Percent,
+ LogOut,
+ Plane,
+ User,
+ Menu,
+ X,
+ Shield
 } from 'lucide-react';
 import { useState } from 'react';
 
 const navigation = [
-  { name: 'Dashboard', href: '/admin/dashboard', icon: Dashboard },
+  { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
   { name: 'Agents', href: '/admin/agents', icon: Users },
   { name: 'Leads', href: '/admin/leads', icon: Target },
-  { name: 'Offers', href: '/admin/offers', icon: TicketPercent },
+  { name: 'Offers', href: '/admin/offers', icon: Percent },
 ];
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -38,7 +38,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b px-4 py-3 flex items-center justify-between">
         <Link to="/admin/dashboard" className="flex items-center gap-2">
           <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-            <Travel2 className="w-5 h-5 text-white" />
+            <Plane className="w-5 h-5 text-white" />
           </div>
           <span className="font-bold text-gray-900">MANY2GO</span>
         </Link>
@@ -60,7 +60,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             {/* Logo */}
             <div className="p-4 border-b hidden lg:flex items-center gap-2">
               <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-                <Travel2 className="w-5 h-5 text-white" />
+                <Plane className="w-5 h-5 text-white" />
               </div>
               <span className="font-bold text-gray-900">MANY2GO</span>
               <span className="ml-auto px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">

@@ -1,26 +1,26 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
-  Dashboard, 
-  Map, 
-  Calendar, 
-  TicketPercent, 
-  MessageSquare, 
-  LogOut,
-  Travel2,
-  User,
-  Menu,
-  X,
-  List
+ LayoutDashboard, 
+ Map, 
+ Calendar, 
+ Percent, 
+ MessageSquare, 
+ LogOut,
+ Plane,
+ User,
+ Menu,
+ X,
+ List
 } from 'lucide-react';
 import { useState } from 'react';
 
 const navigation = [
-  { name: 'Dashboard', href: '/app/dashboard', icon: Dashboard },
+  { name: 'Dashboard', href: '/app/dashboard', icon: LayoutDashboard },
   { name: 'My Itineraries', href: '/app/itineraries', icon: List },
   { name: 'New Trip', href: '/app/itinerary/new', icon: Map },
   { name: 'My Bookings', href: '/app/bookings', icon: Calendar },
-  { name: 'Offers', href: '/app/offers', icon: TicketPercent },
+  { name: 'Offers', href: '/app/offers', icon: Percent },
   { name: 'Chat', href: '/app/chat', icon: MessageSquare },
 ];
 
@@ -41,7 +41,7 @@ export function CustomerLayout({ children }: { children: React.ReactNode }) {
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b px-4 py-3 flex items-center justify-between">
         <Link to="/app/dashboard" className="flex items-center gap-2">
           <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-            <Travel2 className="w-5 h-5 text-white" />
+            <Plane className="w-5 h-5 text-white" />
           </div>
           <span className="font-bold text-gray-900">MANY2GO</span>
         </Link>
@@ -63,7 +63,7 @@ export function CustomerLayout({ children }: { children: React.ReactNode }) {
             {/* Logo */}
             <div className="p-4 border-b hidden lg:flex items-center gap-2">
               <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-                <Travel2 className="w-5 h-5 text-white" />
+                <Plane className="w-5 h-5 text-white" />
               </div>
               <span className="font-bold text-gray-900">MANY2GO</span>
             </div>

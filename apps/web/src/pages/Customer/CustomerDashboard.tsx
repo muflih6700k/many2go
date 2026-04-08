@@ -5,7 +5,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { bookingsApi, offersApi, itinerariesApi } from '@/lib/api';
 import { CustomerLayout } from '@/layouts/CustomerLayout';
 import { useAuth } from '@/contexts/AuthContext';
-import { Calendar, MapPin, Tag, ArrowRight, TicketPercent } from 'lucide-react';
+import { Calendar, MapPin, Tag, ArrowRight, Percent } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Booking, Offer, Itinerary } from '@/types';
 
@@ -130,7 +130,7 @@ export function CustomerDashboard() {
         <div className="card">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-              <TicketPercent className="w-5 h-5 text-primary-600" />
+              <Percent className="w-5 h-5 text-primary-600" />
               Special Offers
             </h3>
             <Link to="/app/offers" className="text-sm text-primary-600 hover:text-primary-700">

@@ -54,13 +54,13 @@ router.post(
       // Generate tokens
       const tokens = generateTokens(user.id, user.email, user.role);
 
-      // Set refresh token as httpOnly cookie
-      res.cookie('refreshToken', tokens.refreshToken, {
-        httpOnly: true,
-        secure: env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      });
+// Set refresh token as httpOnly cookie
+ res.cookie('refreshToken', tokens.refreshToken, {
+ httpOnly: true,
+ secure: true,
+ sameSite: 'none',
+ maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+ });
 
       return res.status(201).json({
         success: true,
@@ -117,13 +117,13 @@ router.post(
       // Generate tokens
       const tokens = generateTokens(user.id, user.email, user.role);
 
-      // Set refresh token as httpOnly cookie
-      res.cookie('refreshToken', tokens.refreshToken, {
-        httpOnly: true,
-        secure: env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      });
+// Set refresh token as httpOnly cookie
+ res.cookie('refreshToken', tokens.refreshToken, {
+ httpOnly: true,
+ secure: true,
+ sameSite: 'none',
+ maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+ });
 
       return res.json({
         success: true,
@@ -173,13 +173,13 @@ router.post('/refresh', async (req, res) => {
     // Generate new tokens
     const tokens = generateTokens(user.id, user.email, user.role);
 
-    // Set new refresh token
-    res.cookie('refreshToken', tokens.refreshToken, {
-      httpOnly: true,
-      secure: env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+// Set new refresh token
+ res.cookie('refreshToken', tokens.refreshToken, {
+ httpOnly: true,
+ secure: true,
+ sameSite: 'none',
+ maxAge: 7 * 24 * 60 * 60 * 1000,
+ });
 
     return res.json({
       success: true,

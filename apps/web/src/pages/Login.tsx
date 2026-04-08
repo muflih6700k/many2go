@@ -22,6 +22,17 @@ export function Login() {
     try {
       await login(email, password);
       toast.success('Welcome back!');
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        const userData = JSON.parse(storedUser);
+        if (userData.role === 'ADMIN') {
+          window.location.href = '/admin/dashboard';
+        } else if (userData.role === 'AGENT') {
+          window.location.href = '/agent/dashboard';
+        } else {
+          window.location.href = '/app/dashboard';
+        }
+      }
     } catch (error: any) {
       const message = error.response?.data?.error?.message || 'Login failed';
       toast.error(message);
@@ -33,7 +44,6 @@ export function Login() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-600 rounded-2xl shadow-lg mb-4">
             <Plane className="w-8 h-8 text-white" />
@@ -42,7 +52,6 @@ export function Login() {
           <p className="text-gray-500 mt-1">Travel CRM & Booking Platform</p>
         </div>
 
-        {/* Login Card */}
         <div className="card">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">Sign in</h2>
 
@@ -110,7 +119,6 @@ export function Login() {
           </p>
         </div>
 
-        {/* Footer info */}
         <p className="text-center mt-8 text-sm text-gray-400">
           Protected by JWT authentication with refresh tokens
         </p>

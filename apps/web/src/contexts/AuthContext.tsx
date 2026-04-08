@@ -17,20 +17,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check localStorage on mount
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    const storedToken = localStorage.getItem('accessToken');
-    
-    if (storedUser && storedToken) {
-      setUser(JSON.parse(storedUser));
-      // Verify token is still valid
-      authApi.me().catch(() => {
-        logout();
-      });
-    }
-    setIsLoading(false);
-  }, []);
+ // Check localStorage on mount
+ useEffect(() => {
+ const token = localStorage.getItem('accessToken');
+ 
+ if (!token) {
+ setIsLoading(false);
+ return;
+ }
+ 
+ // Try to verify token with API, fallback to localStorage on failure
+ const verifyAuth = async () => {
+ try {
+ const response = await authApi.me();
+ setUser(response.data.data);
+ localStorage.setItem('user', JSON.stringify(response.data.data));
+ } catch (error) {
+ // Token might be expired, try refresh
+ try {
+ const refreshResponse = await authApi.refresh();
+ const newToken = refreshResponse.data.data.accessToken;
+ localStorage.setItem('accessToken', newToken);
+ 
+ // Now get user with new token
+ const meResponse = await authApi.me();
+ setUser(meResponse.data.data);
+ localStorage.setItem('user', JSON.stringify(meResponse.data.data));
+ } catch (refreshError) {
+ // Refresh failed, clear storage
+ localStorage.removeItem('accessToken');
+ localStorage.removeItem('user');
+ setUser(null);
+ }
+ } finally {
+ setIsLoading(false);
+ }
+ };
+ 
+ verifyAuth();
+ }, []);
 
   const login = async (email: string, password: string) => {
     const response = await authApi.login({ email, password });

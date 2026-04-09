@@ -29,16 +29,76 @@ export interface RegisterData {
 
 export type LeadStatus = 'NEW' | 'CONTACTED' | 'QUOTED' | 'BOOKED' | 'CLOSED';
 
+export type CallStatus =
+ | 'PENDING'
+ | 'NOT_INTERESTED'
+ | 'BANG'
+ | 'ENQUIRY_GENERATED'
+ | 'CALL_BACK'
+ | 'FUTURE_FOLLOWUP'
+ | 'CM_BUSY_CALLBACK'
+ | 'RINGING_NO_RESPONSE'
+ | 'SWITCH_OFF'
+ | 'NOT_REACHABLE'
+ | 'BUSY'
+ | 'VOICE_MAIL'
+ | 'WRONG_NO'
+ | 'INVALID_NO'
+ | 'OUT_OF_SERVICE'
+ | 'REPEATED_NO';
+
 export interface Lead {
-  id: string;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  status: LeadStatus;
-  notes: string | null;
-  assignedAgentId: string | null;
-  createdAt: string;
-  updatedAt: string;
+ id: string;
+ status: LeadStatus;
+ notes: string | null;
+ createdAt: string;
+ updatedAt: string;
+
+ // Relations
+ customerId: string;
+ customer?: User;
+ agentId: string | null;
+ agent?: User;
+
+ // Call Tracking
+ callStatus: CallStatus | null;
+ callDate: string | null;
+ callTime: string | null;
+
+ // Follow-up
+ followUpDate: string | null;
+ followUpTime: string | null;
+ followUpNote: string | null;
+
+ // Contact
+ phone: string | null;
+
+ // Pink Sheet Fields
+ cmNumber: string | null;
+ destination: string | null;
+ travelMonth: string | null;
+ travelDate: string | null;
+ returnDate: string | null;
+ daysPlanned: string | null;
+ adults: number | null;
+ kids: number | null;
+ kidsAge: string | null;
+ mealsplan: string | null;
+ hotelCategory: string | null;
+ budget: string | null;
+ travelFrom: string | null;
+ passportStatus: string | null;
+ lastVacation: string | null;
+ remarks: string | null;
+
+ // Progress
+ whatsappCreated: boolean;
+ itineraryShared: boolean;
+ flightCostsSent: boolean;
+ quoteSent: boolean;
+
+ // Outcome
+ outcome: 'SALE_CLOSED' | 'PROLONGED' | 'DISBANDED' | null;
 }
 
 export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED';

@@ -1,23 +1,25 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
- LayoutDashboard, 
- Users, 
- Calendar, 
- DollarSign,
- LogOut,
- Plane,
- User,
- Menu,
- X,
- Target,
- MessageCircle
+  LayoutDashboard, 
+  Users, 
+  Calendar, 
+  DollarSign,
+  LogOut,
+  Plane,
+  User,
+  Menu,
+  X,
+  Target,
+  MessageCircle,
+  Phone
 } from 'lucide-react';
 import { useState } from 'react';
 
 const navigation = [
   { name: 'Dashboard', href: '/agent/dashboard', icon: LayoutDashboard },
   { name: 'Leads', href: '/agent/leads', icon: Target },
+  { name: 'Calls', href: '/agent/calls', icon: Phone },
   { name: 'Customers', href: '/agent/customers', icon: Users },
   { name: 'Chat', href: '/agent/chat', icon: MessageCircle },
   { name: 'Reminders', href: '/agent/reminders', icon: Calendar },

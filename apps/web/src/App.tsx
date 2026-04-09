@@ -18,6 +18,7 @@ import CustomerChat from '@/pages/Customer/Chat';
 // Agent pages
 import { AgentDashboard } from '@/pages/Agent/AgentDashboard';
 import { LeadsKanban } from '@/pages/Agent/LeadsKanban';
+import { CallManagement } from '@/pages/Agent/CallManagement';
 import { Customers } from '@/pages/Agent/Customers';
 import { AgentReminders } from '@/pages/Agent/AgentReminders';
 import { AgentRevenue } from '@/pages/Agent/AgentRevenue';
@@ -72,16 +73,17 @@ function App() {
             <Route path="/app/*" element={<CustomerDashboard />} />
           </Route>
 
-            {/* Agent routes */}
-            <Route element={<ProtectedRoute allowedRoles={['AGENT']} />}>
-              <Route path="/agent/dashboard" element={<AgentDashboard />} />
-              <Route path="/agent/leads" element={<LeadsKanban />} />
-              <Route path="/agent/customers" element={<Customers />} />
-            <Route path="/agent/reminders" element={<AgentReminders />} />
-            <Route path="/agent/revenue" element={<AgentRevenue />} />
-            <Route path="/agent/chat" element={<AgentChat />} />
-            <Route path="/agent/*" element={<AgentDashboard />} />
-            </Route>
+{/* Agent routes */}
+      <Route element={<ProtectedRoute allowedRoles={['AGENT']} />}>
+        <Route path="/agent/dashboard" element={<AgentDashboard />} />
+        <Route path="/agent/leads" element={<LeadsKanban />} />
+        <Route path="/agent/calls" element={<CallManagement />} />
+        <Route path="/agent/customers" element={<Customers />} />
+        <Route path="/agent/reminders" element={<AgentReminders />} />
+        <Route path="/agent/revenue" element={<AgentRevenue />} />
+        <Route path="/agent/chat" element={<AgentChat />} />
+        <Route path="/agent/*" element={<AgentDashboard />} />
+      </Route>
 
             {/* Admin routes */}
             <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>

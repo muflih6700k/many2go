@@ -24,9 +24,9 @@ router.post(
  const { name, email, password, role } = req.body;
 
  // Determine effective role: ADMIN can set any role, otherwise default to CUSTOMER
- let effectiveRole = 'CUSTOMER';
+ let effectiveRole: UserRole = 'CUSTOMER';
  if (req.user?.role === 'ADMIN') {
- effectiveRole = role || 'CUSTOMER';
+ effectiveRole = (role as UserRole) || 'CUSTOMER';
  } else if (role === 'CUSTOMER') {
  effectiveRole = 'CUSTOMER';
  }

@@ -23,22 +23,29 @@ router.post(
  try {
  const { name, email, password, role } = req.body;
 
- // Determine effective role: ADMIN can set any role, otherwise default to CUSTOMER
+ // Determine effective role: Check Authorization header for ADMIN token
  let effectiveRole: UserRole = 'CUSTOMER';
- if (req.user?.role === 'ADMIN') {
+ const authHeader = req.headers.authorization;
+ if (authHeader) {
+ try {
+ const token = authHeader.split(' ')[1];
+ const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as { role: UserRole };
+ if (decoded.role === 'ADMIN') {
  effectiveRole = (role as UserRole) || 'CUSTOMER';
- } else if (role === 'CUSTOMER') {
- effectiveRole = 'CUSTOMER';
+ }
+ } catch (e) {
+ // Invalid token, default to CUSTOMER
+ }
  }
 
-      // Check if user exists
-      const existingUser = await prisma.user.findUnique({ where: { email } });
-      if (existingUser) {
-        return res.status(409).json({
-          success: false,
-          error: { code: 'EMAIL_EXISTS', message: 'Email already registered' },
-        });
-      }
+ // Check if user exists
+ const existingUser = await prisma.user.findUnique({ where: { email } });
+ if (existingUser) {
+ return res.status(409).json({
+ success: false,
+ error: { code: 'EMAIL_EXISTS', message: 'Email already registered' },
+ });
+ }
 
       // Hash password
       const passwordHash = await bcrypt.hash(password, 10);

@@ -49,6 +49,7 @@ export type CallStatus =
 
 export interface Lead {
  id: string;
+ name: string | null;
  status: LeadStatus;
  notes: string | null;
  createdAt: string;

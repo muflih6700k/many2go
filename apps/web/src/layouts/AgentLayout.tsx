@@ -17,13 +17,13 @@ import {
 import { useState } from 'react';
 
 const navigation = [
-  { name: 'Dashboard', href: '/agent/dashboard', icon: LayoutDashboard },
-  { name: 'Leads', href: '/agent/leads', icon: Target },
-  { name: 'Calls', href: '/agent/calls', icon: Phone },
-  { name: 'Customers', href: '/agent/customers', icon: Users },
-  { name: 'Chat', href: '/agent/chat', icon: MessageCircle },
-  { name: 'Reminders', href: '/agent/reminders', icon: Calendar },
-  { name: 'Revenue', href: '/agent/revenue', icon: DollarSign },
+ { name: 'Dashboard', href: '/agent/dashboard', icon: LayoutDashboard },
+ { name: 'Calls', href: '/agent/calls', icon: Phone },
+ { name: 'Customers', href: '/agent/customers', icon: Users },
+ { name: 'Reminders', href: '/agent/reminders', icon: Calendar },
+ { name: 'Revenue', href: '/agent/revenue', icon: DollarSign },
+ { name: 'Weekly Report', href: '/agent/weekly', icon: Target },
+ { name: 'Chat', href: '/agent/chat', icon: MessageCircle },
 ];
 
 export function AgentLayout({ children }: { children: React.ReactNode }) {

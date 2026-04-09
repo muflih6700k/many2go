@@ -3,141 +3,142 @@ import { PageHeader } from '@/components/PageHeader';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { usersApi, leadsApi, authApi } from '@/lib/api';
 import { toast } from 'react-hot-toast';
-import { Search, User, Mail, X, MoreHorizontal, Ban, Plus, RefreshCw } from 'lucide-react';
+import { Search, User, Mail, X, Ban, Plus, RefreshCw, Users, CheckCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import type { User as UserType, Lead } from '@/types';
 
 interface CreateAgentModalProps {
- isOpen: boolean;
- onClose: () => void;
- onSuccess: () => void;
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
 }
 
 function CreateAgentModal({ isOpen, onClose, onSuccess }: CreateAgentModalProps) {
- const [formData, setFormData] = useState({
- name: '',
- email: '',
- password: '',
- });
- const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
- if (!isOpen) return null;
+  if (!isOpen) return null;
 
- const handleSubmit = async (e: React.FormEvent) => {
- e.preventDefault();
- setIsSubmitting(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
 
- try {
- await authApi.register({
- ...formData,
- role: 'AGENT',
- });
- toast.success('Agent created successfully');
- setFormData({ name: '', email: '', password: '' });
- onSuccess();
- onClose();
- } catch (error: any) {
- toast.error(error.response?.data?.error?.message || 'Failed to create agent');
- } finally {
- setIsSubmitting(false);
- }
- };
+    try {
+      await authApi.register({
+        ...formData,
+        role: 'AGENT',
+      });
+      toast.success('Agent created successfully');
+      setFormData({ name: '', email: '', password: '' });
+      onSuccess();
+      onClose();
+    } catch (error: any) {
+      toast.error(error.response?.data?.error?.message || 'Failed to create agent');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
- return (
- <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
- <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
- <div className="mb-4 flex items-center justify-between">
- <h2 className="text-lg font-semibold text-gray-900">Add New Agent</h2>
- <button
- onClick={onClose}
- className="text-gray-400 hover:text-gray-600"
- >
- <X className="w-5 h-5" />
- </button>
- </div>
- <form onSubmit={handleSubmit} className="space-y-4">
- <div>
- <label className="mb-1 block text-sm font-medium text-gray-700">Full Name</label>
- <input
- type="text"
- required
- value={formData.name}
- onChange={(e) => setFormData({ ...formData, name: e.target.value })}
- className="input w-full"
- placeholder="Enter agent name"
- />
- </div>
- <div>
- <label className="mb-1 block text-sm font-medium text-gray-700">Email</label>
- <input
- type="email"
- required
- value={formData.email}
- onChange={(e) => setFormData({ ...formData, email: e.target.value })}
- className="input w-full"
- placeholder="Enter agent email"
- />
- </div>
- <div>
- <label className="mb-1 block text-sm font-medium text-gray-700">Password</label>
- <input
- type="password"
- required
- minLength={6}
- value={formData.password}
- onChange={(e) => setFormData({ ...formData, password: e.target.value })}
- className="input w-full"
- placeholder="Enter password (min 6 characters)"
- />
- </div>
- <div className="flex justify-end gap-3 pt-2">
- <button
- type="button"
- onClick={onClose}
- className="btn btn-secondary"
- disabled={isSubmitting}
- >
- Cancel
- </button>
- <button
- type="submit"
- className="btn btn-primary"
- disabled={isSubmitting}
- >
- {isSubmitting ? 'Creating...' : 'Create Agent'}
- </button>
- </div>
- </form>
- </div>
- </div>
- );
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">Add New Agent</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Full Name</label>
+            <input
+              type="text"
+              required
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="input w-full"
+              placeholder="Enter agent name"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Email</label>
+            <input
+              type="email"
+              required
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              className="input w-full"
+              placeholder="Enter agent email"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Password</label>
+            <input
+              type="password"
+              required
+              minLength={6}
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              className="input w-full"
+              placeholder="Enter password (min 6 characters)"
+            />
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="btn btn-secondary"
+              disabled={isSubmitting}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Creating...' : 'Create Agent'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 }
 
 export function AdminAgents() {
- const queryClient = useQueryClient();
- const [search, setSearch] = useState('');
- const [isModalOpen, setIsModalOpen] = useState(false);
- const [isAuthReady, setIsAuthReady] = useState(false);
+  const queryClient = useQueryClient();
+  const [search, setSearch] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAuthReady, setIsAuthReady] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState<UserType | null>(null);
 
- // Wait for token to be available
- useEffect(() => {
- const token = localStorage.getItem('accessToken');
- if (token) {
- setIsAuthReady(true);
- }
- }, []);
+  // Wait for token to be available
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      setIsAuthReady(true);
+    }
+  }, []);
 
- const { data: agents, isLoading, refetch } = useQuery({
- queryKey: ['users', 'agents'],
- queryFn: () => usersApi.getAll('AGENT').then(res => res.data.data),
- enabled: isAuthReady,
- });
+  const { data: agents, isLoading, refetch } = useQuery({
+    queryKey: ['users', 'agents'],
+    queryFn: () => usersApi.getAll('AGENT').then(res => res.data.data),
+    enabled: isAuthReady,
+  });
 
- const { data: leads } = useQuery({
- queryKey: ['leads'],
- queryFn: () => leadsApi.getAll().then(res => res.data.data),
- enabled: isAuthReady,
- });
+  const { data: leads } = useQuery({
+    queryKey: ['leads'],
+    queryFn: () => leadsApi.getAll().then(res => res.data.data),
+    enabled: isAuthReady,
+  });
 
   const deactivateMutation = useMutation({
     mutationFn: (id: string) => usersApi.deactivate(id),
@@ -152,45 +153,69 @@ export function AdminAgents() {
     agent.email.toLowerCase().includes(search.toLowerCase())
   );
 
-  const getAgentLeadCount = (agentId: string) =>
-    leads?.filter((l: Lead) => l.assignedAgentId === agentId).length || 0;
+  // Calculate agent stats
+  const getAgentStats = (agentId: string) => {
+    const agentLeads = leads?.filter((l: Lead) => l.agentId === agentId) || [];
+    
+    // Total leads
+    const totalLeads = agentLeads.length;
+    
+    // Enquiries generated
+    const enquiries = agentLeads.filter((l: Lead) => l.callStatus === 'ENQUIRY_GENERATED').length;
+    
+    // Sales closed
+    const salesClosed = agentLeads.filter((l: Lead) => l.outcome === 'SALE_CLOSED').length;
+    
+    // This week's leads
+    const today = new Date();
+    const weekStart = new Date(today);
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Sunday
+    weekStart.setHours(0, 0, 0, 0);
+    
+    const thisWeekLeads = agentLeads.filter((l: Lead) => {
+      const created = new Date(l.createdAt);
+      return created >= weekStart;
+    }).length;
 
- const handleAgentCreated = () => {
- queryClient.invalidateQueries({ queryKey: ['users', 'agents'] });
- };
+    return { totalLeads, enquiries, salesClosed, thisWeekLeads };
+  };
 
- return (
- <AdminLayout>
- <div className="flex items-center justify-between mb-6">
- <PageHeader title="Agents" subtitle="Manage your sales team" />
- <div className="flex items-center gap-2">
- <button
- onClick={() => refetch()}
- disabled={isLoading}
- className="btn btn-secondary flex items-center gap-2"
- title="Refresh list"
- >
- <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
- Refresh
- </button>
- <button
- onClick={() => setIsModalOpen(true)}
- className="btn btn-primary flex items-center gap-2"
- >
- <Plus className="w-4 h-4" />
- Add Agent
- </button>
- </div>
- </div>
+  const handleAgentCreated = () => {
+    queryClient.invalidateQueries({ queryKey: ['users', 'agents'] });
+  };
 
- <CreateAgentModal
- isOpen={isModalOpen}
- onClose={() => setIsModalOpen(false)}
- onSuccess={handleAgentCreated}
- />
+  return (
+    <AdminLayout>
+      <div className="flex items-center justify-between mb-6">
+        <PageHeader title="Agents" subtitle="Manage your sales team" />
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="btn btn-secondary flex items-center gap-2"
+            title="Refresh list"
+          >
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="btn btn-primary flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Add Agent
+          </button>
+        </div>
+      </div>
 
- {/* Search */}
- <div className="relative mb-6">
+      <CreateAgentModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={handleAgentCreated}
+      />
+
+      {/* Search */}
+      <div className="relative mb-6">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
         <input
           type="text"
@@ -209,75 +234,145 @@ export function AdminAgents() {
         )}
       </div>
 
-      {/* Agents Table */}
-      <div className="card p-0 overflow-hidden">
-        <div className="px-6 py-4 border-b">
-          <h3 className="font-medium text-gray-900">Agent List</h3>
-        </div>
-        
-        {isLoading ? (
-          <div className="p-6 space-y-3">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="animate-pulse bg-gray-200 h-14 rounded" />
-            ))}
+      <div className="flex gap-6">
+        {/* Agents Table */}
+        <div className={`card p-0 overflow-hidden flex-1 ${selectedAgent ? 'lg:w-2/3' : 'w-full'}`}>
+          <div className="px-6 py-4 border-b">
+            <h3 className="font-medium text-gray-900">Agent List</h3>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Agent</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Email</th>
-                  <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase">Leads</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Joined</th>
-                  <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filteredAgents?.map((agent: UserType) => (
-                  <tr key={agent.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                          <span className="font-bold text-primary-700">{agent.name.charAt(0)}</span>
-                        </div>
-                        <span className="font-medium text-gray-900">{agent.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{agent.email}</td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        {getAgentLeadCount(agent.id)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      {new Date(agent.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => {
-                          if (confirm('Deactivate this agent?')) {
-                            deactivateMutation.mutate(agent.id);
-                          }
-                        }}
-                        disabled={deactivateMutation.isPending}
-                        className="text-red-600 hover:text-red-700 text-sm font-medium"
-                      >
-                        <Ban className="w-4 h-4 inline mr-1" />
-                        Deactivate
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {filteredAgents?.length === 0 && (
+          
+          {isLoading ? (
+            <div className="p-6 space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="animate-pulse bg-gray-200 h-14 rounded" />
+              ))}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                      No agents found
-                    </td>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Agent</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Email</th>
+                    <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase">Total Leads</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Joined</th>
+                    <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase">Actions</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {filteredAgents?.map((agent: UserType) => {
+                    const stats = getAgentStats(agent.id);
+                    return (
+                      <tr 
+                        key={agent.id} 
+                        className={`hover:bg-gray-50 cursor-pointer ${selectedAgent?.id === agent.id ? 'bg-primary-50' : ''}`}
+                        onClick={() => setSelectedAgent(agent)}
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+                              <span className="font-bold text-primary-700">{agent.name.charAt(0)}</span>
+                            </div>
+                            <span className="font-medium text-gray-900">{agent.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">{agent.email}</td>
+                        <td className="px-6 py-4 text-center">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            {stats.totalLeads}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          {new Date(agent.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (confirm('Deactivate this agent?')) {
+                                deactivateMutation.mutate(agent.id);
+                              }
+                            }}
+                            disabled={deactivateMutation.isPending}
+                            className="text-red-600 hover:text-red-700 text-sm font-medium"
+                          >
+                            <Ban className="w-4 h-4 inline mr-1" />
+                            Deactivate
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {filteredAgents?.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                        No agents found
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Agent Stats Side Panel */}
+        {selectedAgent && (
+          <div className="w-full lg:w-80 card p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-medium text-gray-900">Agent Stats</h3>
+              <button
+                onClick={() => setSelectedAgent(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
+                <span className="font-bold text-primary-700 text-lg">{selectedAgent.name.charAt(0)}</span>
+              </div>
+              <div>
+                <p className="font-medium text-gray-900">{selectedAgent.name}</p>
+                <p className="text-sm text-gray-500">{selectedAgent.email}</p>
+              </div>
+            </div>
+            
+            {(() => {
+              const { totalLeads, enquiries, salesClosed, thisWeekLeads } = getAgentStats(selectedAgent.id);
+              return (
+                <div className="space-y-4">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center gap-2 text-gray-500 mb-1">
+                      <Users className="w-4 h-4" />
+                      <span className="text-sm">Total Leads</span>
+                    </div>
+                    <p className="text-2xl font-bold text-gray-900">{totalLeads}</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center gap-2 text-gray-500 mb-1">
+                      <CheckCircle className="w-4 h-4" />
+                      <span className="text-sm">Enquiries Generated</span>
+                    </div>
+                    <p className="text-2xl font-bold text-gray-900">{enquiries}</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center gap-2 text-gray-500 mb-1">
+                      <Users className="w-4 h-4" />
+                      <span className="text-sm">Sales Closed</span>
+                    </div>
+                    <p className="text-2xl font-bold text-green-600">{salesClosed}</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center gap-2 text-gray-500 mb-1">
+                      <CheckCircle className="w-4 h-4" />
+                      <span className="text-sm">This Week's Leads</span>
+                    </div>
+                    <p className="text-2xl font-bold text-primary-600">{thisWeekLeads}</p>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
       </div>

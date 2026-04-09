@@ -13,11 +13,14 @@ router.use(authenticate);
 // Create lead (any authenticated user) - auto assigns to agent with fewest leads
 router.post(
  '/',
- validate([body('phone').optional().trim(), body('notes').optional().trim()]),
+ validate([body('phone').optional().trim(), body('notes').optional().trim(), body('name').optional().trim(), body('customerName').optional().trim()]),
  async (req, res) => {
  try {
  const { user } = req;
- const { phone, notes } = req.body;
+ const { phone, notes, name, customerName, source, email } = req.body;
+
+ // Get the customer name from either field
+ const leadName = name || customerName;
 
  // Find agent with fewest active leads (round-robin)
  const agents = await prisma.user.findMany({
@@ -39,9 +42,26 @@ router.post(
 
  const agentId = leastBusy?.agent.id;
 
+ // Update customer name if provided and user is creating their own lead
+ if (leadName && user?.userId) {
+ await prisma.user.update({
+ where: { id: user.userId },
+ data: { name: leadName },
+ });
+ }
+
+ // Also update email if provided
+ if (email && user?.userId) {
+ await prisma.user.update({
+ where: { id: user.userId },
+ data: { email: email.toLowerCase() },
+ });
+ }
+
  const lead = await prisma.lead.create({
  data: {
  customerId: user!.userId,
+ name: leadName || null,
  phone: phone || null,
  notes: notes || null,
  agentId: agentId,

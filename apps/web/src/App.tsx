@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -23,6 +23,7 @@ import { Customers } from '@/pages/Agent/Customers';
 import { AgentReminders } from '@/pages/Agent/AgentReminders';
 import { AgentRevenue } from '@/pages/Agent/AgentRevenue';
 import AgentChat from '@/pages/Agent/AgentChat';
+import { WeeklyReport } from '@/pages/Agent/WeeklyReport';
 
 // Admin pages
 import { AdminDashboard } from '@/pages/Admin/AdminDashboard';
@@ -76,14 +77,15 @@ function App() {
 
 {/* Agent routes */}
       <Route element={<ProtectedRoute allowedRoles={['AGENT']} />}>
-        <Route path="/agent/dashboard" element={<AgentDashboard />} />
-        <Route path="/agent/leads" element={<LeadsKanban />} />
+<Route path="/agent/dashboard" element={<AgentDashboard />} />
+ <Route path="/agent/leads" element={<Navigate to="/agent/calls" />} />
         <Route path="/agent/calls" element={<CallManagement />} />
         <Route path="/agent/customers" element={<Customers />} />
         <Route path="/agent/reminders" element={<AgentReminders />} />
-        <Route path="/agent/revenue" element={<AgentRevenue />} />
-        <Route path="/agent/chat" element={<AgentChat />} />
-        <Route path="/agent/*" element={<AgentDashboard />} />
+<Route path="/agent/revenue" element={<AgentRevenue />} />
+ <Route path="/agent/chat" element={<AgentChat />} />
+ <Route path="/agent/weekly" element={<WeeklyReport />} />
+ <Route path="/agent/*" element={<AgentDashboard />} />
       </Route>
 
             {/* Admin routes */}

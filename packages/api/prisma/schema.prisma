@@ -55,6 +55,7 @@ model Lead {
  id String @id @default(uuid())
  customerId String
  agentId String?
+ name String?
  status LeadStatus @default(NEW)
  notes String?
  createdAt DateTime @default(now())

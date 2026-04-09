@@ -1,11 +1,11 @@
 import express from 'express';
-import { requireRole } from '../middleware/jwt';
+import { authenticate, requireRole } from '../middleware/jwt';
 import { prisma } from '../config/prisma';
 
 const router = express.Router();
 
 // Get all users (ADMIN only) - supports ?role=AGENT filter
-router.get('/', requireRole('ADMIN'), async (req, res) => {
+router.get('/', authenticate, requireRole('ADMIN'), async (req, res) => {
  try {
  const { role } = req.query;
 

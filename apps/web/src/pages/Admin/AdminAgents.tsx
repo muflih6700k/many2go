@@ -3,8 +3,8 @@ import { PageHeader } from '@/components/PageHeader';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { usersApi, leadsApi, authApi } from '@/lib/api';
 import { toast } from 'react-hot-toast';
-import { Search, User, Mail, X, MoreHorizontal, Ban, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { Search, User, Mail, X, MoreHorizontal, Ban, Plus, RefreshCw } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import type { User as UserType, Lead } from '@/types';
 
 interface CreateAgentModalProps {
@@ -117,16 +117,27 @@ export function AdminAgents() {
  const queryClient = useQueryClient();
  const [search, setSearch] = useState('');
  const [isModalOpen, setIsModalOpen] = useState(false);
+ const [isAuthReady, setIsAuthReady] = useState(false);
 
-  const { data: agents, isLoading } = useQuery({
-    queryKey: ['users', 'agents'],
-    queryFn: () => usersApi.getAll('AGENT').then(res => res.data.data),
-  });
+ // Wait for token to be available
+ useEffect(() => {
+ const token = localStorage.getItem('accessToken');
+ if (token) {
+ setIsAuthReady(true);
+ }
+ }, []);
 
-  const { data: leads } = useQuery({
-    queryKey: ['leads'],
-    queryFn: () => leadsApi.getAll().then(res => res.data.data),
-  });
+ const { data: agents, isLoading, refetch } = useQuery({
+ queryKey: ['users', 'agents'],
+ queryFn: () => usersApi.getAll('AGENT').then(res => res.data.data),
+ enabled: isAuthReady,
+ });
+
+ const { data: leads } = useQuery({
+ queryKey: ['leads'],
+ queryFn: () => leadsApi.getAll().then(res => res.data.data),
+ enabled: isAuthReady,
+ });
 
   const deactivateMutation = useMutation({
     mutationFn: (id: string) => usersApi.deactivate(id),
@@ -152,6 +163,16 @@ export function AdminAgents() {
  <AdminLayout>
  <div className="flex items-center justify-between mb-6">
  <PageHeader title="Agents" subtitle="Manage your sales team" />
+ <div className="flex items-center gap-2">
+ <button
+ onClick={() => refetch()}
+ disabled={isLoading}
+ className="btn btn-secondary flex items-center gap-2"
+ title="Refresh list"
+ >
+ <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+ Refresh
+ </button>
  <button
  onClick={() => setIsModalOpen(true)}
  className="btn btn-primary flex items-center gap-2"
@@ -159,6 +180,7 @@ export function AdminAgents() {
  <Plus className="w-4 h-4" />
  Add Agent
  </button>
+ </div>
  </div>
 
  <CreateAgentModal

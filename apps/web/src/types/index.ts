@@ -187,12 +187,22 @@ export interface Revenue {
   receivedAt: string;
 }
 
+export interface LeadActivity {
+ id: string;
+ leadId: string;
+ agentId: string;
+ agent?: User;
+ action: string;
+ details?: string | null;
+ createdAt: string;
+}
+
 // API Response types
 export interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  error?: {
-    code: string;
-    message: string;
-  };
+ success: boolean;
+ data: T;
+ error?: {
+ code: string;
+ message: string;
+ };
 }

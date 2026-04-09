@@ -180,7 +180,17 @@ router.patch(
  async (req, res) => {
  try {
  const { id } = req.params;
+ const { user } = req;
  const updateData: any = {};
+
+ // Get existing lead for comparison
+ const existingLead = await prisma.lead.findUnique({
+ where: { id },
+ });
+
+ if (!existingLead) {
+ return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Lead not found' } });
+ }
 
  // Standard fields
  const standardFields = ['status', 'agentId', 'notes', 'phone', 'callStatus', 'callDate', 'callTime',
@@ -213,10 +223,137 @@ router.patch(
  },
  });
 
+ // Log activities for significant changes
+ const activities = [];
+
+ // Call status changed
+ if (req.body.callStatus && req.body.callStatus !== existingLead.callStatus) {
+ activities.push({
+ leadId: id,
+ agentId: user!.userId,
+ action: 'CALL_STATUS_CHANGED',
+ details: `Call status changed from ${existingLead.callStatus} to ${req.body.callStatus}`
+ });
+ }
+
+ // Follow-up scheduled
+ if (req.body.followUpDate && !existingLead.followUpDate) {
+ activities.push({
+ leadId: id,
+ agentId: user!.userId,
+ action: 'FOLLOW_UP_SCHEDULED',
+ details: `Follow-up scheduled for ${req.body.followUpDate}${req.body.followUpTime ? ' at ' + req.body.followUpTime : ''}`
+ });
+ }
+
+ // Pink sheet updated (enquiry details)
+ const pinkSheetFields = ['cmNumber', 'destination', 'travelMonth', 'travelDate', 'returnDate', 'daysPlanned',
+ 'adults', 'kids', 'kidsAge', 'mealsplan', 'hotelCategory', 'budget', 'travelFrom',
+ 'passportStatus', 'lastVacation', 'remarks'];
+ const pinkSheetUpdated = pinkSheetFields.some(field => req.body[field] !== undefined);
+ if (pinkSheetUpdated) {
+ activities.push({
+ leadId: id,
+ agentId: user!.userId,
+ action: 'ENQUIRY_UPDATED',
+ details: 'Enquiry details updated'
+ });
+ }
+
+ // Checklist items
+ if (req.body.whatsappCreated && !existingLead.whatsappCreated) {
+ activities.push({
+ leadId: id,
+ agentId: user!.userId,
+ action: 'CHECKLIST_UPDATED',
+ details: 'WhatsApp group created'
+ });
+ }
+ if (req.body.itineraryShared && !existingLead.itineraryShared) {
+ activities.push({
+ leadId: id,
+ agentId: user!.userId,
+ action: 'CHECKLIST_UPDATED',
+ details: 'Itinerary shared'
+ });
+ }
+ if (req.body.flightCostsSent && !existingLead.flightCostsSent) {
+ activities.push({
+ leadId: id,
+ agentId: user!.userId,
+ action: 'CHECKLIST_UPDATED',
+ details: 'Flight costs sent'
+ });
+ }
+ if (req.body.quoteSent && !existingLead.quoteSent) {
+ activities.push({
+ leadId: id,
+ agentId: user!.userId,
+ action: 'CHECKLIST_UPDATED',
+ details: 'Quote sent'
+ });
+ }
+
+ // Outcome set
+ if (req.body.outcome && req.body.outcome !== existingLead.outcome) {
+ activities.push({
+ leadId: id,
+ agentId: user!.userId,
+ action: 'OUTCOME_SET',
+ details: `Outcome marked as ${req.body.outcome}`
+ });
+ }
+
+ // Create all activity entries
+ if (activities.length > 0) {
+ await prisma.leadActivity.createMany({ data: activities });
+ }
+
  return res.json({ success: true, data: lead });
  } catch (error) {
  console.error('Update lead error:', error);
  return res.status(500).json({ success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to update lead' } });
+ }
+ }
+);
+
+// Get activities for a lead
+router.get(
+ '/:id/activities',
+ authenticate,
+ async (req, res) => {
+ try {
+ const { id } = req.params;
+ const { user } = req;
+
+ // Check if user has access to this lead
+ const lead = await prisma.lead.findFirst({
+ where: {
+ id,
+ OR: [
+ { customerId: user!.userId },
+ { agentId: user!.userId },
+ ...(user!.role === 'ADMIN' ? [{}] : []),
+ ],
+ },
+ });
+
+ if (!lead) {
+ return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Lead not found' } });
+ }
+
+ const activities = await prisma.leadActivity.findMany({
+ where: { leadId: id },
+ orderBy: { createdAt: 'desc' },
+ include: {
+ agent: { select: { id: true, name: true, email: true } },
+ },
+ });
+
+ return res.json({ success: true, data: activities });
+ } catch (error) {
+ console.error('Get activities error:', error);
+ return res.status(500).json({ success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch activities' } });
  }
  }
 );

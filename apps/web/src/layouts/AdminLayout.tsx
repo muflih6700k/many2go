@@ -10,15 +10,17 @@ import {
  User,
  Menu,
  X,
- Shield
+ Shield,
+ BarChart2
 } from 'lucide-react';
 import { useState } from 'react';
 
 const navigation = [
-  { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-  { name: 'Agents', href: '/admin/agents', icon: Users },
-  { name: 'Leads', href: '/admin/leads', icon: Target },
-  { name: 'Offers', href: '/admin/offers', icon: Percent },
+ { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+ { name: 'Agents', href: '/admin/agents', icon: Users },
+ { name: 'Leads', href: '/admin/leads', icon: Target },
+ { name: 'Analytics', href: '/admin/analytics', icon: BarChart2 },
+ { name: 'Offers', href: '/admin/offers', icon: Percent },
 ];
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {

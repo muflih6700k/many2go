@@ -83,13 +83,14 @@ export const authApi = {
 };
 
 export const leadsApi = {
-  getAll: () => api.get('/api/leads'),
-  getById: (id: string) => api.get(`/api/leads/${id}`),
-  create: (data: Partial<Lead>) => api.post('/api/leads', data),
-  update: (id: string, data: Partial<Lead>) => api.patch(`/api/leads/${id}`, data),
-  delete: (id: string) => api.delete(`/api/leads/${id}`),
-  assign: (leadId: string, agentId: string) =>
-    api.patch(`/api/leads/${leadId}/assign`, { agentId }),
+ getAll: () => api.get('/api/leads'),
+ getById: (id: string) => api.get(`/api/leads/${id}`),
+ create: (data: Partial<Lead>) => api.post('/api/leads', data),
+ update: (id: string, data: Partial<Lead>) => api.patch(`/api/leads/${id}`, data),
+ delete: (id: string) => api.delete(`/api/leads/${id}`),
+ assign: (leadId: string, agentId: string) =>
+ api.patch(`/api/leads/${leadId}/assign`, { agentId }),
+ getActivities: (id: string) => api.get(`/api/leads/${id}/activities`),
 };
 
 export const itinerariesApi = {

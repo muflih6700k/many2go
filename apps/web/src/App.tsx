@@ -29,6 +29,7 @@ import { WeeklyReport } from '@/pages/Agent/WeeklyReport';
 import { AdminDashboard } from '@/pages/Admin/AdminDashboard';
 import { AdminAgents } from '@/pages/Admin/AdminAgents';
 import { AdminLeads } from '@/pages/Admin/AdminLeads';
+import { AdminAnalytics } from '@/pages/Admin/AdminAnalytics';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -88,14 +89,15 @@ function App() {
  <Route path="/agent/*" element={<AgentDashboard />} />
       </Route>
 
-            {/* Admin routes */}
-            <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
-              <Route path="/admin/dashboard" element={<AdminDashboard />} />
-              <Route path="/admin/agents" element={<AdminAgents />} />
-              <Route path="/admin/leads" element={<AdminLeads />} />
-              <Route path="/admin/offers" element={<div className="p-8">Offers CRUD - Coming soon</div>} />
-              <Route path="/admin/*" element={<AdminDashboard />} />
-            </Route>
+ {/* Admin routes */}
+ <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+ <Route path="/admin/dashboard" element={<AdminDashboard />} />
+ <Route path="/admin/agents" element={<AdminAgents />} />
+ <Route path="/admin/leads" element={<AdminLeads />} />
+ <Route path="/admin/analytics" element={<AdminAnalytics />} />
+ <Route path="/admin/offers" element={<div className="p-8">Offers CRUD - Coming soon</div>} />
+ <Route path="/admin/*" element={<AdminDashboard />} />
+ </Route>
 
             {/* Default redirect */}
             <Route path="*" element={<Login />} />

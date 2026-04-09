@@ -4,20 +4,24 @@ import { AgentLayout } from '@/layouts/AgentLayout';
 import { leadsApi } from '@/lib/api';
 import { toast } from 'react-hot-toast';
 import { 
-  Search, 
-  X, 
-  Phone, 
-  Calendar,
-  Clock,
-  FileText,
-  Activity,
-  User,
-  ChevronRight,
-  Save,
-  MessageSquare
+ Search, 
+ X, 
+ Phone, 
+ Calendar,
+ Clock,
+ FileText,
+ Activity,
+ User,
+ ChevronRight,
+ Save,
+ MessageSquare,
+ CheckCircle,
+ FileEdit,
+ Flag,
+ ListChecks
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
-import type { Lead } from '@/types';
+import type { Lead, LeadActivity } from '@/types';
 
 // Extended Lead type for call management
 interface CallLead extends Lead {
@@ -153,8 +157,65 @@ function getStatusColor(status: CallStatus): string {
 }
 
 function getStatusLabel(status: CallStatus): string {
-  const found = CALL_STATUSES.find(s => s.value === status);
-  return found?.label || status.replace(/_/g, ' ');
+const found = CALL_STATUSES.find(s => s.value === status);
+ return found?.label || status.replace(/_/g, ' ');
+}
+
+function timeAgo(date: string): string {
+ const now = new Date();
+ const then = new Date(date);
+ const diffMs = now.getTime() - then.getTime();
+ const diffSecs = Math.floor(diffMs / 1000);
+ const diffMins = Math.floor(diffSecs / 60);
+ const diffHours = Math.floor(diffMins / 60);
+ const diffDays = Math.floor(diffHours / 24);
+
+ if (diffSecs < 60) return 'Just now';
+ if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+ if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+ if (diffDays === 1) return 'Yesterday';
+ if (diffDays < 7) return `${diffDays} days ago`;
+ return then.toLocaleDateString();
+}
+
+function getActivityIcon(action: string) {
+ if (action === 'CALL_STATUS_CHANGED') return <Phone className="w-5 h-5 text-blue-600" />;
+ if (action === 'FOLLOW_UP_SCHEDULED') return <Calendar className="w-5 h-5 text-yellow-600" />;
+ if (action === 'ENQUIRY_UPDATED') return <FileEdit className="w-5 h-5 text-purple-600" />;
+ if (action === 'CHECKLIST_UPDATED') return <ListChecks className="w-5 h-5 text-green-600" />;
+ if (action === 'OUTCOME_SET') return <Flag className="w-5 h-5 text-red-600" />;
+ return <Activity className="w-5 h-5 text-gray-600" />;
+}
+
+function getActivityColor(action: string): string {
+ if (action === 'CALL_STATUS_CHANGED') return 'bg-blue-100 text-blue-600';
+ if (action === 'FOLLOW_UP_SCHEDULED') return 'bg-yellow-100 text-yellow-600';
+ if (action === 'ENQUIRY_UPDATED') return 'bg-purple-100 text-purple-600';
+ if (action === 'CHECKLIST_UPDATED') return 'bg-green-100 text-green-600';
+ if (action === 'OUTCOME_SET') return 'bg-red-100 text-red-600';
+ return 'bg-gray-100 text-gray-600';
+}
+
+function ActivityTimelineItem({ activity }: { activity: LeadActivity }) {
+ return (
+ <div className="flex gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+ <div className="flex-shrink-0">
+ <div className={`w-10 h-10 rounded-full flex items-center justify-center ${getActivityColor(activity.action)}`}>
+ {getActivityIcon(activity.action)}
+ </div>
+ </div>
+ <div className="flex-1 min-w-0">
+ <p className="font-medium text-gray-900">{activity.details}</p>
+ <div className="flex items-center gap-2 mt-1">
+ <span className="text-sm text-gray-500">{activity.agent?.name || 'Unknown'}</span>
+ <span className="text-gray-300">•</span>
+ <span className="text-sm text-gray-500" title={new Date(activity.createdAt).toLocaleString()}>
+ {timeAgo(activity.createdAt)}
+ </span>
+ </div>
+ </div>
+ </div>
+ );
 }
 
 function StatusBadge({ status }: { status: CallStatus }) {
@@ -169,8 +230,15 @@ export function CallManagement() {
   const queryClient = useQueryClient();
   const [activeFilter, setActiveFilter] = useState<FilterTab>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedLead, setSelectedLead] = useState<CallLead | null>(null);
-  const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>('STATUS');
+ const [selectedLead, setSelectedLead] = useState<CallLead | null>(null);
+ const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>('STATUS');
+ 
+ // Fetch activities when a lead is selected
+ const { data: activities } = useQuery({
+ queryKey: ['lead-activities', selectedLead?.id],
+ queryFn: () => selectedLead?.id ? leadsApi.getActivities(selectedLead.id).then(res => res.data.data) : [],
+ enabled: !!selectedLead?.id && activeDetailTab === 'HISTORY',
+ });
   
   // Form states
   const [callStatus, setCallStatus] = useState<CallStatus>('PENDING');
@@ -968,84 +1036,47 @@ export function CallManagement() {
                   </div>
                 )}
 
-                {/* HISTORY TAB */}
-                {activeDetailTab === 'HISTORY' && (
-                  <div className="space-y-4">
-                    <h4 className="font-medium text-gray-900 flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-primary-600" />
-                      Call History
-                    </h4>
-                    
-                    <div className="space-y-3">
-                      {/* Show call entry if exists */}
-                      {selectedLead.callDate && (
-                        <div className="flex gap-4 p-4 bg-gray-50 rounded-lg">
-                          <div className="flex-shrink-0">
-                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                              <Phone className="w-5 h-5 text-blue-600" />
-                            </div>
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-900">Call Made</p>
-                            <p className="text-sm text-gray-500">
-                              {new Date(selectedLead.callDate).toLocaleString()}
-                            </p>
-                            <div className="mt-2">
-                              <StatusBadge status={selectedLead.callStatus || 'PENDING'} />
-                            </div>
-                          </div>
-                        </div>
-                      )}
+ {/* HISTORY TAB */}
+ {activeDetailTab === 'HISTORY' && (
+ <div className="space-y-4">
+ <h4 className="font-medium text-gray-900 flex items-center gap-2">
+ <Clock className="w-4 h-4 text-primary-600" />
+ Activity Timeline
+ </h4>
+ 
+ <div className="space-y-3 max-h-96 overflow-y-auto">
+ {/* Activities from API */}
+ {activities?.map((activity: LeadActivity) => (
+ <ActivityTimelineItem key={activity.id} activity={activity} />
+ ))}
 
-                      {/* Show follow-up entry if exists */}
-                      {selectedLead.followUpDate && (
-                        <div className="flex gap-4 p-4 bg-yellow-50 rounded-lg border border-yellow-100">
-                          <div className="flex-shrink-0">
-                            <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
-                              <Clock className="w-5 h-5 text-yellow-600" />
-                            </div>
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-900">Follow-up Scheduled</p>
-                            <p className="text-sm text-gray-500">
-                              {new Date(selectedLead.followUpDate).toLocaleString()}
-                            </p>
-                            {selectedLead.followUpNotes && (
-                              <p className="mt-2 text-sm text-gray-600 bg-white p-2 rounded">
-                                {selectedLead.followUpNotes}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      )}
+ {/* Show lead creation at the bottom */}
+ <div className="flex gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+ <div className="flex-shrink-0">
+ <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+ <User className="w-5 h-5 text-gray-600" />
+ </div>
+ </div>
+ <div className="flex-1">
+ <p className="font-medium text-gray-900">Lead Created</p>
+ <p className="text-sm text-gray-500">
+ {timeAgo(selectedLead.createdAt)}
+ </p>
+ <p className="text-xs text-gray-400 mt-1">
+ {new Date(selectedLead.createdAt).toLocaleString()}
+ </p>
+ </div>
+ </div>
 
-                      {/* Show lead creation */}
-                      <div className="flex gap-4 p-4 bg-green-50 rounded-lg border border-green-100">
-                        <div className="flex-shrink-0">
-                          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                            <User className="w-5 h-5 text-green-600" />
-                          </div>
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-medium text-gray-900">Lead Created</p>
-                          <p className="text-sm text-gray-500">
-                            {new Date(selectedLead.createdAt).toLocaleString()}
-                          </p>
-                          <p className="text-xs text-gray-400 mt-1">
-                            Status: {selectedLead.status}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Empty state if no history */}
-                      {!selectedLead.callDate && !selectedLead.followUpDate && (
-                        <p className="text-center py-8 text-gray-400">
-                          No call history available yet.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
+ {/* Empty state if no activities */}
+ {(!activities || activities.length === 0) && (
+ <p className="text-center py-8 text-gray-400">
+ No activity yet. Actions will appear here when you update this lead.
+ </p>
+ )}
+ </div>
+ </div>
+ )}
               </div>
             </div>
           )}

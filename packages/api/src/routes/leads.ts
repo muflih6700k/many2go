@@ -19,21 +19,25 @@ router.post(
  const { user } = req;
  const { phone, notes } = req.body;
 
- // Find agent with fewest active leads
+ // Find agent with fewest active leads (round-robin)
  const agents = await prisma.user.findMany({
  where: { role: 'AGENT' },
- include: {
- _count: { select: { assignedLeads: true } }
- }
  });
 
- let agentId: string | undefined;
- if (agents.length > 0) {
- const agent = agents.sort((a, b) =>
- a._count.assignedLeads - b._count.assignedLeads
- )[0];
- agentId = agent.id;
- }
+ const leadCounts = await Promise.all(
+ agents.map(async (agent) => {
+ const count = await prisma.lead.count({
+ where: { agentId: agent.id }
+ });
+ return { agent, count };
+ })
+ );
+
+ const leastBusy = leadCounts.sort(
+ (a, b) => a.count - b.count
+)[0];
+
+ const agentId = leastBusy?.agent.id;
 
  const lead = await prisma.lead.create({
  data: {

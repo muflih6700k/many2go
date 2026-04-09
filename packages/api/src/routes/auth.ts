@@ -6,21 +6,30 @@ import { prisma } from '../config/prisma';
 import { env } from '../config/env';
 import { validate } from '../middleware/validate';
 import { UserRole } from '../types';
+import { AuthenticatedRequest } from '../middleware/jwt';
 
 const router = express.Router();
 
 // Register
 router.post(
-  '/register',
-  validate([
-    body('name').trim().notEmpty().withMessage('Name is required'),
-    body('email').isEmail().normalizeEmail().withMessage('Valid email required'),
-    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-    body('role').optional().isIn(['CUSTOMER', 'AGENT']).withMessage('Invalid role'),
-  ]),
-  async (req, res) => {
-    try {
-      const { name, email, password, role } = req.body;
+ '/register',
+ validate([
+ body('name').trim().notEmpty().withMessage('Name is required'),
+ body('email').isEmail().normalizeEmail().withMessage('Valid email required'),
+ body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+ body('role').optional().isIn(['CUSTOMER', 'AGENT', 'ADMIN']).withMessage('Invalid role'),
+ ]),
+ async (req: AuthenticatedRequest, res) => {
+ try {
+ const { name, email, password, role } = req.body;
+
+ // Determine effective role: ADMIN can set any role, otherwise default to CUSTOMER
+ let effectiveRole = 'CUSTOMER';
+ if (req.user?.role === 'ADMIN') {
+ effectiveRole = role || 'CUSTOMER';
+ } else if (role === 'CUSTOMER') {
+ effectiveRole = 'CUSTOMER';
+ }
 
       // Check if user exists
       const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -34,14 +43,14 @@ router.post(
       // Hash password
       const passwordHash = await bcrypt.hash(password, 10);
 
-      // Create user
-      const user = await prisma.user.create({
-        data: {
-          name,
-          email,
-          passwordHash,
-          role: role || 'CUSTOMER',
-        },
+ // Create user
+ const user = await prisma.user.create({
+ data: {
+ name,
+ email,
+ passwordHash,
+ role: effectiveRole,
+ },
         select: {
           id: true,
           name: true,

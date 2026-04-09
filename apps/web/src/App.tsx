@@ -27,6 +27,7 @@ import AgentChat from '@/pages/Agent/AgentChat';
 // Admin pages
 import { AdminDashboard } from '@/pages/Admin/AdminDashboard';
 import { AdminAgents } from '@/pages/Admin/AdminAgents';
+import { AdminLeads } from '@/pages/Admin/AdminLeads';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -89,7 +90,7 @@ function App() {
             <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
               <Route path="/admin/agents" element={<AdminAgents />} />
-              <Route path="/admin/leads" element={<div className="p-8">All Leads - Coming soon</div>} />
+              <Route path="/admin/leads" element={<AdminLeads />} />
               <Route path="/admin/offers" element={<div className="p-8">Offers CRUD - Coming soon</div>} />
               <Route path="/admin/*" element={<AdminDashboard />} />
             </Route>

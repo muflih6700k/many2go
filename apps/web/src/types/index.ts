@@ -72,6 +72,8 @@ export interface Lead {
 
  // Contact
  phone: string | null;
+ source?: string | null;
+ customerName?: string | null;
 
  // Pink Sheet Fields
  cmNumber: string | null;

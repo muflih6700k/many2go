@@ -1,6 +1,7 @@
 import express from 'express';
 import { authenticate, requireRole } from '../middleware/jwt';
 import { prisma } from '../config/prisma';
+import { UserRole } from '../types';
 
 const router = express.Router();
 
@@ -10,7 +11,7 @@ router.get('/', authenticate, requireRole('ADMIN'), async (req, res) => {
  const { role } = req.query;
 
  const users = await prisma.user.findMany({
- where: role ? { role: role as string } : undefined,
+ where: role ? { role: role as UserRole } : undefined,
  select: {
  id: true,
  name: true,

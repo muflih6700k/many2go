@@ -10,32 +10,51 @@ const router = express.Router();
 // All routes require authentication
 router.use(authenticate);
 
-// Create lead (any authenticated user)
+// Create lead (any authenticated user) - auto assigns to agent with fewest leads
 router.post(
-  '/',
-  validate([body('notes').optional().trim()]),
-  async (req, res) => {
-    try {
-      const { user } = req;
-      const { notes } = req.body;
+ '/',
+ validate([body('phone').optional().trim(), body('notes').optional().trim()]),
+ async (req, res) => {
+ try {
+ const { user } = req;
+ const { phone, notes } = req.body;
 
-      const lead = await prisma.lead.create({
-        data: {
-          customerId: user!.userId,
-          notes: notes || null,
-        },
-        include: {
-          customer: { select: { id: true, name: true, email: true } },
-          agent: { select: { id: true, name: true, email: true } },
-        },
-      });
+ // Find agent with fewest active leads
+ const agents = await prisma.user.findMany({
+ where: { role: 'AGENT' },
+ include: {
+ _count: { select: { assignedLeads: true } }
+ }
+ });
 
-      return res.status(201).json({ success: true, data: lead });
-    } catch (error) {
-      console.error('Create lead error:', error);
-      return res.status(500).json({ success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to create lead' } });
-    }
-  }
+ let agentId: string | undefined;
+ if (agents.length > 0) {
+ const agent = agents.sort((a, b) =>
+ a._count.assignedLeads - b._count.assignedLeads
+ )[0];
+ agentId = agent.id;
+ }
+
+ const lead = await prisma.lead.create({
+ data: {
+ customerId: user!.userId,
+ phone: phone || null,
+ notes: notes || null,
+ agentId: agentId,
+ callStatus: 'PENDING',
+ },
+ include: {
+ customer: { select: { id: true, name: true, email: true } },
+ agent: { select: { id: true, name: true, email: true } },
+ },
+ });
+
+ return res.status(201).json({ success: true, data: lead });
+ } catch (error) {
+ console.error('Create lead error:', error);
+ return res.status(500).json({ success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to create lead' } });
+ }
+ }
 );
 
 // Get leads with pagination
@@ -97,39 +116,85 @@ router.get(
   }
 );
 
+// Get follow-ups for today (AGENT or ADMIN)
+router.get(
+ '/followups',
+ requireRole('AGENT', 'ADMIN'),
+ async (req, res) => {
+ try {
+ const today = new Date();
+ today.setHours(0, 0, 0, 0);
+
+ const leads = await prisma.lead.findMany({
+ where: {
+ callStatus: {
+ in: ['CALL_BACK', 'FUTURE_FOLLOWUP', 'CM_BUSY_CALLBACK']
+ },
+ followUpDate: {
+ lte: today
+ }
+ },
+ orderBy: { followUpDate: 'asc' },
+ include: {
+ customer: { select: { id: true, name: true, email: true } },
+ agent: { select: { id: true, name: true, email: true } },
+ },
+ });
+
+ return res.json({ success: true, data: leads });
+ } catch (error) {
+ console.error('Get followups error:', error);
+ return res.status(500).json({ success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch followups' } });
+ }
+ }
+);
+
 // Update lead (AGENT or ADMIN only for assignment/status)
 router.patch(
-  '/:id',
-  requireRole('AGENT', 'ADMIN'),
-  validate([
-    body('status').optional().isIn(LeadStatusValues),
-    body('agentId').optional().isUUID(),
-    body('notes').optional().trim(),
-  ]),
-  async (req, res) => {
-    try {
-      const { id } = req.params;
-      const updateData: any = {};
+ '/:id',
+ requireRole('AGENT', 'ADMIN'),
+ async (req, res) => {
+ try {
+ const { id } = req.params;
+ const updateData: any = {};
 
-      if (req.body.status) updateData.status = req.body.status;
-      if (req.body.agentId) updateData.agentId = req.body.agentId;
-      if (req.body.notes !== undefined) updateData.notes = req.body.notes;
+ // Standard fields
+ const standardFields = ['status', 'agentId', 'notes', 'phone', 'callStatus', 'callDate', 'callTime',
+ 'followUpDate', 'followUpTime', 'followUpNote',
+ 'cmNumber', 'destination', 'travelMonth', 'travelDate', 'returnDate',
+ 'daysPlanned', 'adults', 'kids', 'kidsAge',
+ 'mealsplan', 'hotelCategory', 'budget', 'travelFrom',
+ 'passportStatus', 'lastVacation', 'remarks', 'outcome'];
 
-      const lead = await prisma.lead.update({
-        where: { id },
-        data: updateData,
-        include: {
-          customer: { select: { id: true, name: true, email: true } },
-          agent: { select: { id: true, name: true, email: true } },
-        },
-      });
+ standardFields.forEach(field => {
+ if (req.body[field] !== undefined) {
+ updateData[field] = req.body[field];
+ }
+ });
 
-      return res.json({ success: true, data: lead });
-    } catch (error) {
-      console.error('Update lead error:', error);
-      return res.status(500).json({ success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to update lead' } });
-    }
-  }
+ // Boolean fields
+ const booleanFields = ['whatsappCreated', 'itineraryShared', 'flightCostsSent', 'quoteSent'];
+ booleanFields.forEach(field => {
+ if (req.body[field] !== undefined) {
+ updateData[field] = req.body[field];
+ }
+ });
+
+ const lead = await prisma.lead.update({
+ where: { id },
+ data: updateData,
+ include: {
+ customer: { select: { id: true, name: true, email: true } },
+ agent: { select: { id: true, name: true, email: true } },
+ },
+ });
+
+ return res.json({ success: true, data: lead });
+ } catch (error) {
+ console.error('Update lead error:', error);
+ return res.status(500).json({ success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to update lead' } });
+ }
+ }
 );
 
 export default router;

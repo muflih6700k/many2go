@@ -52,18 +52,56 @@ model User {
 }
 
 model Lead {
-  id          String     @id @default(uuid())
-  customerId  String
-  agentId     String?
-  status      LeadStatus @default(NEW)
-  notes       String?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+ id String @id @default(uuid())
+ customerId String
+ agentId String?
+ status LeadStatus @default(NEW)
+ notes String?
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
 
-  // Relations
-  customer    User       @relation("CustomerLeads", fields: [customerId], references: [id], onDelete: Cascade)
-  agent       User?      @relation("AgentLeads", fields: [agentId], references: [id], onDelete: SetNull)
-  reminders   Reminder[]
+ // Call Tracking Fields
+ callStatus String? @default("PENDING")
+ callDate DateTime?
+ callTime String?
+
+ // Follow-up Fields
+ followUpDate DateTime?
+ followUpTime String?
+ followUpNote String?
+
+ // Contact & Reference Fields
+ phone String?
+ cmNumber String?
+
+ // Travel Details Fields
+ destination String?
+ travelMonth String?
+ travelDate String?
+ returnDate String?
+ daysPlanned String?
+ adults Int? @default(1)
+ kids Int? @default(0)
+ kidsAge String?
+ mealsplan String?
+ hotelCategory String?
+ budget String?
+ travelFrom String?
+ passportStatus String?
+ lastVacation String?
+ remarks String?
+
+ // Communication Tracking Flags
+ whatsappCreated Boolean @default(false)
+ itineraryShared Boolean @default(false)
+ flightCostsSent Boolean @default(false)
+ quoteSent Boolean @default(false)
+ outcome String?
+
+ // Relations
+ customer User @relation("CustomerLeads", fields: [customerId], references: [id], onDelete: Cascade)
+ agent User? @relation("AgentLeads", fields: [agentId], references: [id], onDelete: SetNull)
+ reminders Reminder[]
 }
 
 model Itinerary {

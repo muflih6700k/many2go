@@ -4,31 +4,34 @@ import { prisma } from '../config/prisma';
 
 const router = express.Router();
 
-// Get all users (ADMIN only)
+// Get all users (ADMIN only) - supports ?role=AGENT filter
 router.get('/', requireRole('ADMIN'), async (req, res) => {
-  try {
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        createdAt: true,
-        _count: {
-          select: {
-            customerLeads: true,
-            itineraries: true,
-          },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+ try {
+ const { role } = req.query;
 
-    return res.json({ success: true, data: users });
-  } catch (error) {
-    console.error('Get users error:', error);
-    return res.status(500).json({ success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch users' } });
-  }
+ const users = await prisma.user.findMany({
+ where: role ? { role: role as string } : undefined,
+ select: {
+ id: true,
+ name: true,
+ email: true,
+ role: true,
+ createdAt: true,
+ _count: {
+ select: {
+ customerLeads: true,
+ itineraries: true,
+ },
+ },
+ },
+ orderBy: { createdAt: 'desc' },
+ });
+
+ return res.json({ success: true, data: users });
+ } catch (error) {
+ console.error('Get users error:', error);
+ return res.status(500).json({ success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch users' } });
+ }
 });
 
 // Get all agents (for lead assignment)

@@ -1,12 +1,12 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { authenticateToken } from '../middleware/auth';
+import { authenticate } from '../middleware/jwt';
 
 const router = Router();
 const prisma = new PrismaClient();
 
 // GET /api/itinerary-templates - list all templates
-router.get('/', authenticateToken, async (req: Request, res: Response) => {
+router.get('/', authenticate, async (req: Request, res: Response) => {
   try {
     const templates = await prisma.itineraryTemplate.findMany({
       orderBy: { planNum: 'asc' },
@@ -19,7 +19,7 @@ router.get('/', authenticateToken, async (req: Request, res: Response) => {
 });
 
 // GET /api/itinerary-templates/:code - get by code
-router.get('/:code', authenticateToken, async (req: Request, res: Response) => {
+router.get('/:code', authenticate, async (req: Request, res: Response) => {
   try {
     const { code } = req.params;
     const template = await prisma.itineraryTemplate.findUnique({

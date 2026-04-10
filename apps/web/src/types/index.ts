@@ -182,9 +182,25 @@ export interface Revenue {
   id: string;
   bookingId: string;
   grossAmount: number;
-  commissionPercent: number;
-  netAmount: number;
-  receivedAt: string;
+ commissionPercent: number;
+ netAmount: number;
+ receivedAt: string;
+}
+
+export interface ItineraryTemplate {
+ id: string;
+ code: string;
+ planNum: number;
+ title: string;
+ days: number;
+ nights: number;
+ destination: string;
+ brief: string | null;
+ itinerary: any;
+ pricingUsd: any;
+ dmc: string;
+ validity: string | null;
+ createdAt: string;
 }
 
 export interface LeadActivity {

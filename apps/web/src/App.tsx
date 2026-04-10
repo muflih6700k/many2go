@@ -24,6 +24,7 @@ import { AgentReminders } from '@/pages/Agent/AgentReminders';
 import { AgentRevenue } from '@/pages/Agent/AgentRevenue';
 import AgentChat from '@/pages/Agent/AgentChat';
 import { WeeklyReport } from '@/pages/Agent/WeeklyReport';
+import ItineraryBuilder from '@/pages/Agent/ItineraryBuilder';
 
 // Admin pages
 import { AdminDashboard } from '@/pages/Admin/AdminDashboard';
@@ -77,17 +78,18 @@ function App() {
           </Route>
 
 {/* Agent routes */}
-      <Route element={<ProtectedRoute allowedRoles={['AGENT']} />}>
+ <Route element={<ProtectedRoute allowedRoles={['AGENT']} />}>
 <Route path="/agent/dashboard" element={<AgentDashboard />} />
  <Route path="/agent/leads" element={<Navigate to="/agent/calls" />} />
-        <Route path="/agent/calls" element={<CallManagement />} />
-        <Route path="/agent/customers" element={<Customers />} />
-        <Route path="/agent/reminders" element={<AgentReminders />} />
+ <Route path="/agent/calls" element={<CallManagement />} />
+ <Route path="/agent/customers" element={<Customers />} />
+ <Route path="/agent/reminders" element={<AgentReminders />} />
 <Route path="/agent/revenue" element={<AgentRevenue />} />
+ <Route path="/agent/itinerary-builder" element={<ItineraryBuilder />} />
  <Route path="/agent/chat" element={<AgentChat />} />
  <Route path="/agent/weekly" element={<WeeklyReport />} />
  <Route path="/agent/*" element={<AgentDashboard />} />
-      </Route>
+ </Route>
 
  {/* Admin routes */}
  <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>

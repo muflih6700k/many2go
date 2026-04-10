@@ -136,10 +136,20 @@ export const revenueApi = {
 };
 
 export const usersApi = {
-  getAll: (role?: string) => api.get(role ? `/api/users?role=${role}` : '/api/users'),
-  getById: (id: string) => api.get(`/api/users/${id}`),
-  update: (id: string, data: Partial<User>) => api.patch(`/api/users/${id}`, data),
-  deactivate: (id: string) => api.patch(`/api/users/${id}/deactivate`),
+ getAll: (role?: string) => api.get(role ? `/api/users?role=${role}` : '/api/users'),
+ getById: (id: string) => api.get(`/api/users/${id}`),
+ update: (id: string, data: Partial<User>) => api.patch(`/api/users/${id}`, data),
+ deactivate: (id: string) => api.patch(`/api/users/${id}/deactivate`),
+ getAgents: () => api.get('/api/users?role=AGENT'),
+};
+
+export const itineraryTemplatesApi = {
+ getAll: () => api.get('/api/itinerary-templates'),
+ getByCode: (code: string) => api.get(`/api/itinerary-templates/${code}`),
+};
+
+export const agentsApi = {
+ getAgents: () => api.get('/api/users?role=AGENT'),
 };
 
 export default api;

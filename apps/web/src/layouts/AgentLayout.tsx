@@ -1,18 +1,19 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
-  LayoutDashboard, 
-  Users, 
-  Calendar, 
-  DollarSign,
-  LogOut,
-  Plane,
-  User,
-  Menu,
-  X,
-  Target,
-  MessageCircle,
-  Phone
+ LayoutDashboard, 
+ Users, 
+ Calendar, 
+ DollarSign,
+ LogOut,
+ Plane,
+ User,
+ Menu,
+ X,
+ Target,
+ MessageCircle,
+ Phone,
+ FileText
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -22,6 +23,7 @@ const navigation = [
  { name: 'Customers', href: '/agent/customers', icon: Users },
  { name: 'Reminders', href: '/agent/reminders', icon: Calendar },
  { name: 'Revenue', href: '/agent/revenue', icon: DollarSign },
+ { name: 'Itinerary Builder', href: '/agent/itinerary-builder', icon: FileText },
  { name: 'Weekly Report', href: '/agent/weekly', icon: Target },
  { name: 'Chat', href: '/agent/chat', icon: MessageCircle },
 ];

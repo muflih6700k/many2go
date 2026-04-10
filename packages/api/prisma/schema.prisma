@@ -201,3 +201,19 @@ model Revenue {
 
   @@unique([agentId, bookingId])
 }
+
+model ItineraryTemplate {
+ id String @id @default(uuid())
+ code String @unique 
+ planNum Int
+ title String
+ days Int
+ nights Int
+ destination String
+ brief String? @db.Text
+ itinerary Json 
+ pricingUsd Json 
+ dmc String @default("Threeland Travel")
+ validity String?
+ createdAt DateTime @default(now())
+}

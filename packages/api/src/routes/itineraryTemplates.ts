@@ -92,7 +92,7 @@ router.post('/generate-pdf', authenticate, async (req: Request, res: Response) =
 
  // Trip Info Box
  const infoY = 220;
- doc.rect(100, infoY, 400, 200).fill(lightGray).stroke(teal, 2);
+ doc.rect(100, infoY, 400, 200).fill(lightGray).stroke(teal);
  
  doc.fontSize(12).font('Helvetica-Bold').fillColor(black);
  doc.text('Trip ID:', 120, infoY + 20);
@@ -350,7 +350,7 @@ router.post('/generate-pdf', authenticate, async (req: Request, res: Response) =
 
  // Total line
  currentY += 10;
- doc.moveTo(50, currentY).lineTo(530, currentY).stroke(teal, 2);
+ doc.moveTo(50, currentY).lineTo(530, currentY).stroke(teal);
  currentY += 15;
 
  doc.font('Helvetica-Bold').fillColor(black);

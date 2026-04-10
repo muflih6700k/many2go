@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { AgentLayout } from '@/layouts/AgentLayout';
 import { PageHeader } from '@/components/PageHeader';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { useToast } from '@/hooks/use-toast';
+import toast from 'react-hot-toast';
 import { Search, Users, Calendar, DollarSign, MapPin, Building2, Flame, FileText, ChevronLeft, ChevronRight, CheckCircle, Calculator } from 'lucide-react';
 import { agentsApi, itineraryTemplatesApi } from '@/lib/api';
 import type { ItineraryTemplate, User } from '@/types';
@@ -41,10 +41,9 @@ const calculateEndDate = (startDate: string, days: number) => {
 };
 
 export default function ItineraryBuilder() {
-  const [step, setStep] = useState<Step>(1);
-  const [searchCode, setSearchCode] = useState('');
-  const [selectedTemplate, setSelectedTemplate] = useState<ItineraryTemplate | null>(null);
-  const { toast } = useToast();
+ const [step, setStep] = useState<Step>(1);
+ const [searchCode, setSearchCode] = useState('');
+ const [selectedTemplate, setSelectedTemplate] = useState<ItineraryTemplate | null>(null);
 
   const [tripDetails, setTripDetails] = useState<TripDetails>({
     customerName: '',
@@ -124,32 +123,32 @@ export default function ItineraryBuilder() {
     }
   };
 
-  const handleStepChange = (newStep: Step) => {
-    if (newStep === 2 && !selectedTemplate) {
-      toast({ title: 'Select a template first', variant: 'destructive' });
-      return;
-    }
-    if (newStep === 3) {
-      if (!tripDetails.customerName || !tripDetails.startDate || !tripDetails.consultantId) {
-        toast({ title: 'Fill in all required fields', variant: 'destructive' });
-        return;
-      }
-    }
-    setStep(newStep);
-  };
+const handleStepChange = (newStep: Step) => {
+ if (newStep === 2 && !selectedTemplate) {
+ toast.error('Select a template first');
+ return;
+ }
+ if (newStep === 3) {
+ if (!tripDetails.customerName || !tripDetails.startDate || !tripDetails.consultantId) {
+ toast.error('Fill in all required fields');
+ return;
+ }
+ }
+ setStep(newStep);
+ };
 
-  const handleGeneratePDF = () => {
-    toast({ title: 'PDF Generation - Coming in Phase 2' });
-  };
+ const handleGeneratePDF = () => {
+ toast('PDF Generation - Coming in Phase 2');
+ };
 
-  const handleSaveDraft = () => {
-    toast({ title: 'Draft Saved Successfully' });
-  };
+ const handleSaveDraft = () => {
+ toast.success('Draft Saved Successfully');
+ };
 
-  const handleLinkLead = () => {
-    // Will implement dropdown to select lead
-    toast({ title: 'Link to Lead - Coming Soon' });
-  };
+ const handleLinkLead = () => {
+ // Will implement dropdown to select lead
+ toast('Link to Lead - Coming Soon');
+ };
 
   return (
     <AgentLayout>

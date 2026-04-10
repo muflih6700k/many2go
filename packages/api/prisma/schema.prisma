@@ -99,6 +99,7 @@ model Lead {
  flightCostsSent Boolean @default(false)
  quoteSent Boolean @default(false)
  outcome String?
+ tag String? @default("COLD")
 
  // Relations
  customer User @relation("CustomerLeads", fields: [customerId], references: [id], onDelete: Cascade)

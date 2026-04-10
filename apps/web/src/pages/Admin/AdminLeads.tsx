@@ -309,14 +309,15 @@ export function AdminLeads() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
-                <tr>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Customer</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Phone</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Assigned Agent</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Destination</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Created</th>
-                </tr>
+<tr>
+ <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Customer</th>
+ <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Phone</th>
+ <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Assigned Agent</th>
+ <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
+ <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Tag</th>
+ <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Destination</th>
+ <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Created</th>
+ </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {filteredLeads?.map((lead: Lead) => (
@@ -346,20 +347,32 @@ export function AdminLeads() {
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(lead.callStatus)}`}>
-                        {getStatusLabel(lead.callStatus)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{lead.destination || '-'}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      {new Date(lead.createdAt).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))}
-                {filteredLeads?.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+<td className="px-6 py-4">
+ <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(lead.callStatus)}`}>
+ {getStatusLabel(lead.callStatus)}
+ </span>
+ </td>
+ <td className="px-6 py-4">
+ {lead.tag && (
+ <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
+ lead.tag === 'HOT' ? 'bg-red-100 text-red-700 border-red-200' :
+ lead.tag === 'WARM' ? 'bg-amber-100 text-amber-700 border-amber-200' :
+ 'bg-blue-100 text-blue-700 border-blue-200'
+ }`}>
+ {lead.tag === 'HOT' && '🔴 '}{lead.tag === 'WARM' && '🟡 '}{lead.tag === 'COLD' && '🔵 '}
+ {lead.tag}
+ </span>
+ )}
+ </td>
+ <td className="px-6 py-4 text-sm text-gray-600">{lead.destination || '-'}</td>
+ <td className="px-6 py-4 text-sm text-gray-500">
+ {new Date(lead.createdAt).toLocaleDateString()}
+ </td>
+ </tr>
+ ))}
+ {filteredLeads?.length === 0 && (
+ <tr>
+ <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
                       {search || statusFilter !== 'ALL' ? 'No leads match your filters' : 'No leads found'}
                     </td>
                   </tr>

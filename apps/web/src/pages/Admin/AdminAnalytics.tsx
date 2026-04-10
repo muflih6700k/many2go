@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { PageHeader } from '@/components/PageHeader';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { leadsApi, usersApi } from '@/lib/api';
-import { TrendingUp, Users, Phone, DollarSign, BarChart2 } from 'lucide-react';
+import { TrendingUp, Users, Phone, DollarSign, BarChart2, Flame } from 'lucide-react';
 import { useMemo } from 'react';
 import type { Lead, User } from '@/types';
 
@@ -109,6 +109,7 @@ export function AdminAnalytics() {
  const totalLeadsThisMonth = leads.filter((l: Lead) => new Date(l.createdAt) >= startOfMonth).length;
  const enquiriesGenerated = leads.filter((l: Lead) => l.callStatus === 'ENQUIRY_GENERATED').length;
  const salesClosed = leads.filter((l: Lead) => l.outcome === 'SALE_CLOSED').length;
+ const hotLeads = leads.filter((l: Lead) => l.tag === 'HOT').length;
  const conversionRate = totalLeadsThisMonth > 0 ? Math.round((salesClosed / totalLeadsThisMonth) * 100) : 0;
 
  // Section 3: Call Status Breakdown
@@ -140,6 +141,7 @@ export function AdminAnalytics() {
  totalLeadsThisMonth,
  enquiriesGenerated,
  salesClosed,
+ hotLeads,
  conversionRate,
  statusCounts,
  sourceCounts,
@@ -159,7 +161,7 @@ export function AdminAnalytics() {
  ) : (
  <div className="space-y-6">
  {/* SECTION 1: KEY METRICS */}
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+ <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4">
  <div className="card p-4">
  <div className="flex items-center gap-3">
  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -198,8 +200,20 @@ export function AdminAnalytics() {
  
  <div className="card p-4">
  <div className="flex items-center gap-3">
+ <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+ <Flame className="w-6 h-6 text-red-600" />
+ </div>
+ <div>
+ <p className="text-sm text-gray-500">Hot Leads</p>
+ <p className="text-2xl font-bold text-gray-900">{stats.hotLeads}</p>
+ </div>
+ </div>
+ </div>
+ 
+ <div className="card p-4">
+ <div className="flex items-center gap-3">
  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
- <TrendingUp className="w-6 h-6 text-purple-600" />
+ <BarChart2 className="w-6 h-6 text-purple-600" />
  </div>
  <div>
  <p className="text-sm text-gray-500">Conversion Rate</p>
@@ -208,6 +222,7 @@ export function AdminAnalytics() {
  </div>
  </div>
  </div>
+
 
  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
  {/* SECTION 2: AGENT LEADERBOARD */}

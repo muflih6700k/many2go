@@ -25,33 +25,35 @@ import type { Lead, LeadActivity } from '@/types';
 
 // Extended Lead type for call management
 interface CallLead extends Lead {
-  callStatus: CallStatus;
-  followUpDate?: string;
-  callDate?: string;
-  followUpNotes?: string;
-  // Pink Sheet fields
-  cmNumber?: string;
-  destination?: string;
-  travelMonth?: string;
-  travelDate?: string;
-  returnDate?: string;
-  daysPlanned?: number;
-  adults?: number;
-  kids?: number;
-  kidsAge?: string;
-  mealsplan?: string;
-  hotelCategory?: string;
-  budget?: number;
-  travelFrom?: string;
-  passportStatus?: string;
-  lastVacation?: string;
-  remarks?: string;
-  // Progress fields
-  whatsappCreated?: boolean;
-  itineraryShared?: boolean;
-  flightCostsSent?: boolean;
-  quoteSent?: boolean;
-  outcome?: ProgressOutcome;
+ callStatus: CallStatus;
+ followUpDate?: string;
+ callDate?: string;
+ followUpNotes?: string;
+ // Pink Sheet fields
+ cmNumber?: string;
+ destination?: string;
+ travelMonth?: string;
+ travelDate?: string;
+ returnDate?: string;
+ daysPlanned?: number;
+ adults?: number;
+ kids?: number;
+ kidsAge?: string;
+ mealsplan?: string;
+ hotelCategory?: string;
+ budget?: number;
+ travelFrom?: string;
+ passportStatus?: string;
+ lastVacation?: string;
+ remarks?: string;
+ // Progress fields
+ whatsappCreated?: boolean;
+ itineraryShared?: boolean;
+ flightCostsSent?: boolean;
+ quoteSent?: boolean;
+ outcome?: ProgressOutcome;
+ // Tag
+ tag?: 'HOT' | 'WARM' | 'COLD';
 }
 
 type CallStatus = 
@@ -74,7 +76,7 @@ type CallStatus =
 
 type ProgressOutcome = 'SALE_CLOSED' | 'PROLONGED' | 'DISBANDED';
 
-type FilterTab = 'ALL' | 'FOLLOW_UP' | 'INTERESTED' | 'CLOSED';
+type FilterTab = 'ALL' | 'FOLLOW_UP' | 'INTERESTED' | 'CLOSED' | 'HOT';
 
 type DetailTab = 'STATUS' | 'PINK_SHEET' | 'PROGRESS' | 'HISTORY';
 
@@ -218,12 +220,35 @@ function ActivityTimelineItem({ activity }: { activity: LeadActivity }) {
  );
 }
 
+function TagBadge({ tag }: { tag?: 'HOT' | 'WARM' | 'COLD' }) {
+ if (!tag) return null;
+ 
+ const colors: Record<string, string> = {
+ 'HOT': 'bg-red-100 text-red-700 border-red-200',
+ 'WARM': 'bg-amber-100 text-amber-700 border-amber-200',
+ 'COLD': 'bg-blue-100 text-blue-700 border-blue-200',
+ };
+ 
+ const icons: Record<string, string> = {
+ 'HOT': '🔴',
+ 'WARM': '🟡',
+ 'COLD': '🔵',
+ };
+
+ return (
+ <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${colors[tag]}`}>
+ <span className="mr-0.5">{icons[tag]}</span>
+ {tag}
+ </span>
+ );
+}
+
 function StatusBadge({ status }: { status: CallStatus }) {
-  return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(status)}`}>
-      {getStatusLabel(status)}
-    </span>
-  );
+ return (
+ <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(status)}`}>
+ {getStatusLabel(status)}
+ </span>
+ );
 }
 
 export function CallManagement() {
@@ -299,26 +324,29 @@ export function CallManagement() {
     
     let filtered = leads;
     
-    // Apply filter tabs
-    switch (activeFilter) {
-      case 'FOLLOW_UP':
-        filtered = filtered.filter(l => 
-          ['CALL_BACK', 'FUTURE_FOLLOWUP', 'CM_BUSY_CALLBACK'].includes(l.callStatus)
-        );
-        break;
-      case 'INTERESTED':
-        filtered = filtered.filter(l => 
-          ['ENQUIRY_GENERATED'].includes(l.callStatus)
-        );
-        break;
-      case 'CLOSED':
-        filtered = filtered.filter(l => 
-          ['NOT_INTERESTED', 'BANG', 'SALE_CLOSED'].includes(l.callStatus) || l.outcome === 'SALE_CLOSED'
-        );
-        break;
-      default:
-        break;
-    }
+// Apply filter tabs
+ switch (activeFilter) {
+ case 'FOLLOW_UP':
+ filtered = filtered.filter(l => 
+ ['CALL_BACK', 'FUTURE_FOLLOWUP', 'CM_BUSY_CALLBACK'].includes(l.callStatus)
+ );
+ break;
+ case 'INTERESTED':
+ filtered = filtered.filter(l => 
+ ['ENQUIRY_GENERATED'].includes(l.callStatus)
+ );
+ break;
+ case 'CLOSED':
+ filtered = filtered.filter(l => 
+ ['NOT_INTERESTED', 'BANG', 'SALE_CLOSED'].includes(l.callStatus) || l.outcome === 'SALE_CLOSED'
+ );
+ break;
+ case 'HOT':
+ filtered = filtered.filter(l => l.tag === 'HOT');
+ break;
+ default:
+ break;
+ }
     
     // Apply search
     if (searchQuery.trim()) {
@@ -451,7 +479,7 @@ export function CallManagement() {
         <div className="w-[35%] flex flex-col gap-4">
           {/* Filter Tabs */}
           <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
-            {(['ALL', 'FOLLOW_UP', 'INTERESTED', 'CLOSED'] as FilterTab[]).map((tab) => (
+            {(['ALL', 'FOLLOW_UP', 'INTERESTED', 'CLOSED', 'HOT'] as FilterTab[]).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveFilter(tab)}
@@ -461,9 +489,10 @@ export function CallManagement() {
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                {tab === 'ALL' ? 'All' : 
-                 tab === 'FOLLOW_UP' ? 'Follow Up' :
-                 tab === 'INTERESTED' ? 'Interested' : 'Closed'}
+{tab === 'ALL' ? 'All' : 
+ tab === 'FOLLOW_UP' ? 'Follow Up' :
+ tab === 'INTERESTED' ? 'Interested' : 
+ tab === 'HOT' ? '🔥 Hot' : 'Closed'}
               </button>
             ))}
           </div>
@@ -536,9 +565,12 @@ export function CallManagement() {
                     }`} />
                   </div>
                   
-                  <div className="flex items-center justify-between mt-2 pt-2 border-t">
-                    <StatusBadge status={lead.callStatus || 'PENDING'} />
-                    <span className="text-xs text-gray-400">
+<div className="flex items-center justify-between mt-2 pt-2 border-t">
+ <div className="flex items-center gap-2">
+ <StatusBadge status={lead.callStatus || 'PENDING'} />
+ <TagBadge tag={lead.tag} />
+ </div>
+ <span className="text-xs text-gray-400">
                       {lead.callDate 
                         ? new Date(lead.callDate).toLocaleDateString()
                         : lead.updatedAt

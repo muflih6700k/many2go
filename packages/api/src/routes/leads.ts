@@ -214,6 +214,32 @@ router.patch(
  }
  });
 
+ // Auto-calculate tag based on business rules:
+ // HOT = ENQUIRY_GENERATED + at least one checklist item done
+ // WARM = ENQUIRY_GENERATED + no checklist items
+ // COLD = everything else (unless manually overridden)
+ if (req.body.tag !== undefined) {
+ // Manual override from request body
+ updateData.tag = req.body.tag;
+ } else {
+ // Auto-calculate
+ const hasChecklistProgress = 
+ (req.body.whatsappCreated !== undefined ? req.body.whatsappCreated : existingLead.whatsappCreated) ||
+ (req.body.itineraryShared !== undefined ? req.body.itineraryShared : existingLead.itineraryShared) ||
+ (req.body.flightCostsSent !== undefined ? req.body.flightCostsSent : existingLead.flightCostsSent) ||
+ (req.body.quoteSent !== undefined ? req.body.quoteSent : existingLead.quoteSent);
+ 
+ const currentCallStatus = req.body.callStatus || existingLead.callStatus;
+ 
+ if (currentCallStatus === 'ENQUIRY_GENERATED' && hasChecklistProgress) {
+ updateData.tag = 'HOT';
+ } else if (currentCallStatus === 'ENQUIRY_GENERATED' && !hasChecklistProgress) {
+ updateData.tag = 'WARM';
+ } else {
+ updateData.tag = 'COLD';
+ }
+ }
+
  const lead = await prisma.lead.update({
  where: { id },
  data: updateData,

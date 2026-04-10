@@ -8,20 +8,37 @@ import { agentsApi, itineraryTemplatesApi } from '@/lib/api';
 import type { ItineraryTemplate, User } from '@/types';
 
 interface TripDetails {
-  customerName: string;
-  customerPhone: string;
-  tripId: string;
-  startDate: string;
-  endDate: string;
-  adults: number;
-  kids: number;
-  consultantId: string;
-  hotelCategory: '3' | '4' | '5';
-  forexRate: number;
-  forexCharges: number;
-  visaCharges: number;
-  insuranceCharges: number;
-  markup: number;
+ customerName: string;
+ customerPhone: string;
+ tripId: string;
+ startDate: string;
+ endDate: string;
+ adults: number;
+ kids: number;
+ // Child breakdown (only if kids > 0)
+ kidsUnder5: number;
+ kids5to10Sharing: number;
+ kids5to10ExtraBed: number;
+ kids11plus: number;
+ consultantName: string;
+ hotelCategory: '3' | '4' | '5';
+ // Hotels Section
+ dmcCostPerAdult: number;
+ usdToInrRate: number;
+ // Activities
+ activitiesCost: number;
+ // Transfers
+ transfersCost: number;
+ // Other
+ visaCost: number;
+ travelInsurance: number;
+ arrivalVisa: number;
+ otherLabel: string;
+ otherCost: number;
+ // Markup & Taxes
+ markupPercent: number;
+ gstPercent: number;
+ tcsPercent: number;
 }
 
 type Step = 1 | 2 | 3;
@@ -45,22 +62,39 @@ export default function ItineraryBuilder() {
  const [searchCode, setSearchCode] = useState('');
  const [selectedTemplate, setSelectedTemplate] = useState<ItineraryTemplate | null>(null);
 
-  const [tripDetails, setTripDetails] = useState<TripDetails>({
-    customerName: '',
-    customerPhone: '',
-    tripId: generateTripId(),
-    startDate: '',
-    endDate: '',
-    adults: 2,
-    kids: 0,
-    consultantId: '',
-    hotelCategory: '4',
-    forexRate: 84.5,
-    forexCharges: 2.5,
-    visaCharges: 0,
-    insuranceCharges: 0,
-    markup: 0,
-  });
+ const [tripDetails, setTripDetails] = useState<TripDetails>({
+ customerName: '',
+ customerPhone: '',
+ tripId: generateTripId(),
+ startDate: '',
+ endDate: '',
+ adults: 2,
+ kids: 0,
+ // Child breakdown
+ kidsUnder5: 0,
+ kids5to10Sharing: 0,
+ kids5to10ExtraBed: 0,
+ kids11plus: 0,
+ consultantName: '',
+ hotelCategory: '4',
+ // Hotels
+ dmcCostPerAdult: 650,
+ usdToInrRate: 85.50,
+ // Activities
+ activitiesCost: 0,
+ // Transfers
+ transfersCost: 0,
+ // Other
+ visaCost: 0,
+ travelInsurance: 0,
+ arrivalVisa: 0,
+ otherLabel: '',
+ otherCost: 0,
+ // Markup & Taxes
+ markupPercent: 0,
+ gstPercent: 5,
+ tcsPercent: 5,
+ });
 
   // Fetch templates and agents
   const { data: templates, isLoading: templatesLoading } = useQuery({
@@ -81,35 +115,63 @@ export default function ItineraryBuilder() {
     }
   }, [tripDetails.startDate, selectedTemplate]);
 
-  // Search for template by code
-  const searchedTemplate = useMemo(() => {
-    if (!searchCode || !templates) return null;
-    return templates.find(t => t.code === searchCode || t.code.includes(searchCode)) || null;
-  }, [searchCode, templates]);
+ // Search for template by code
+ const searchedTemplate = useMemo(() => {
+ if (!searchCode || !templates) return null;
+ return templates.find(t => t.code === searchCode || t.code.includes(searchCode)) || null;
+ }, [searchCode, templates]);
 
-  // Pricing calculations (mock pricing lookup - will be replaced with actual pricing table)
-  const calculateLandCost = () => {
-    // Mock pricing - per person based on hotel category
-    const basePrices = {
-      '3': 450,
-      '4': 650,
-      '5': 950,
-    };
-    const perPerson = basePrices[tripDetails.hotelCategory];
-    const totalPax = tripDetails.adults + tripDetails.kids * 0.5; // kids half price
-    return { perPerson, total: Math.round(perPerson * totalPax) };
-  };
+ // === PRICING CALCULATIONS ===
+ const calculations = useMemo(() => {
+ // Child costs based on DMC rate
+ const adultRate = tripDetails.dmcCostPerAdult * tripDetails.usdToInrRate;
+ const kidsTotal =
+ tripDetails.kidsUnder5 * 0 + // Under 5: FREE
+ tripDetails.kids5to10Sharing * adultRate * 0.60 + // 5-10 sharing: 60%
+ tripDetails.kids5to10ExtraBed * adultRate * 0.85 + // 5-10 extra bed: 85%
+ tripDetails.kids11plus * adultRate; // 11+: 100%
 
-  const landCost = calculateLandCost();
+ // Hotels total
+ const hotelsInr = (tripDetails.adults * adultRate) + kidsTotal;
 
-  const calculateLandCostInr = () => {
-    const forexMultiplier = tripDetails.forexRate * (1 + tripDetails.forexCharges / 100);
-    return Math.round(landCost.total * forexMultiplier);
-  };
+ // Subtotal before markup/tax
+ const subtotal =
+ hotelsInr +
+ tripDetails.activitiesCost +
+ tripDetails.transfersCost +
+ tripDetails.visaCost +
+ tripDetails.travelInsurance +
+ tripDetails.arrivalVisa +
+ tripDetails.otherCost;
 
-  const landCostInr = calculateLandCostInr();
+ // Markup
+ const markupAmount = subtotal * (tripDetails.markupPercent / 100);
 
-  const totalQuote = landCostInr + tripDetails.visaCharges + tripDetails.insuranceCharges + tripDetails.markup;
+ // GST on (subtotal + markup)
+ const gstAmount = (subtotal + markupAmount) * (tripDetails.gstPercent / 100);
+
+ // TCS on total (subtotal + markup + gst)
+ const tcsAmount = (subtotal + markupAmount + gstAmount) * (tripDetails.tcsPercent / 100);
+
+ // Grand total
+ const grandTotal = subtotal + markupAmount + gstAmount + tcsAmount;
+
+ // Per person
+ const totalPax = tripDetails.adults + tripDetails.kids;
+ const perPerson = totalPax > 0 ? Math.round(grandTotal / totalPax) : 0;
+
+ return {
+ adultRate,
+ kidsTotal,
+ hotelsInr,
+ subtotal,
+ markupAmount,
+ gstAmount,
+ tcsAmount,
+ grandTotal,
+ perPerson,
+ };
+ }, [tripDetails]);
 
   const handleSelectTemplate = () => {
     if (searchedTemplate) {
@@ -129,7 +191,7 @@ const handleStepChange = (newStep: Step) => {
  return;
  }
  if (newStep === 3) {
- if (!tripDetails.customerName || !tripDetails.startDate || !tripDetails.consultantId) {
+ if (!tripDetails.customerName || !tripDetails.startDate) {
  toast.error('Fill in all required fields');
  return;
  }
@@ -266,290 +328,536 @@ const handleStepChange = (newStep: Step) => {
           </div>
         )}
 
-        {/* STEP 2: Customer & Trip Details */}
-        {step === 2 && selectedTemplate && (
-          <div className="space-y-6">
-            {/* Selected Template Summary */}
-            <div className="card p-4 bg-primary-50 border border-primary-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-sm text-gray-600">Selected Template</span>
-                  <h3 className="font-semibold text-lg">
-                    {selectedTemplate.code}: {selectedTemplate.title}
-                  </h3>
-                  <span className="text-sm text-gray-500">
-                    {selectedTemplate.days} Days / {selectedTemplate.nights} Nights
-                  </span>
-                </div>
-                <button
-                  onClick={() => setStep(1)}
-                  className="text-primary-600 hover:text-primary-700 text-sm"
-                >
-                  Change
-                </button>
-              </div>
-            </div>
+{/* STEP 2: Customer & Trip Details - NEW DESIGN */}
+ {step === 2 && selectedTemplate && (
+ <div className="space-y-6">
+ {/* Selected Template Summary */}
+ <div className="card p-4 bg-primary-50 border border-primary-200">
+ <div className="flex items-center justify-between">
+ <div>
+ <span className="text-sm text-gray-600">Selected Template</span>
+ <h3 className="font-semibold text-lg">
+ {selectedTemplate.code}: {selectedTemplate.title}
+ </h3>
+ <span className="text-sm text-gray-500">
+ {selectedTemplate.days} Days / {selectedTemplate.nights} Nights
+ </span>
+ </div>
+ <button
+ onClick={() => setStep(1)}
+ className="text-primary-600 hover:text-primary-700 text-sm"
+ >
+ Change
+ </button>
+ </div>
+ </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* LEFT COLUMN */}
-              <div className="card space-y-4">
-                <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                  <Users className="w-5 h-5 text-primary-600" />
-                  Customer Details
-                </h3>
+ <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+ {/* === LEFT COLUMN: Customer & Trip Info === */}
+ <div className="space-y-6">
+ {/* Customer Details Section */}
+ <div className="card space-y-4">
+ <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+ <Users className="w-5 h-5 text-primary-600" />
+ Customer Details
+ </h3>
 
-                <div>
-                  <label className="input-label">Customer Name *</label>
-                  <input
-                    type="text"
-                    value={tripDetails.customerName}
-                    onChange={(e) => setTripDetails(prev => ({ ...prev, customerName: e.target.value }))}
-                    className="input-field"
-                    placeholder="Enter customer name"
-                  />
-                </div>
+ <div>
+ <label className="input-label">Customer Name *</label>
+ <input
+ type="text"
+ value={tripDetails.customerName}
+ onChange={(e) => setTripDetails(prev => ({ ...prev, customerName: e.target.value }))}
+ className="input-field"
+ placeholder="Enter customer name"
+ />
+ </div>
 
-                <div>
-                  <label className="input-label">Customer Phone</label>
-                  <input
-                    type="tel"
-                    value={tripDetails.customerPhone}
-                    onChange={(e) => setTripDetails(prev => ({ ...prev, customerPhone: e.target.value }))}
-                    className="input-field"
-                    placeholder="+91 XXXXX XXXXX"
-                  />
-                </div>
+ <div>
+ <label className="input-label">Customer Phone</label>
+ <input
+ type="tel"
+ value={tripDetails.customerPhone}
+ onChange={(e) => setTripDetails(prev => ({ ...prev, customerPhone: e.target.value }))}
+ className="input-field"
+ placeholder="+91 XXXXX XXXXX"
+ />
+ </div>
 
-                <div>
-                  <label className="input-label">Trip ID</label>
-                  <input
-                    type="text"
-                    value={tripDetails.tripId}
-                    readOnly
-                    className="input-field bg-gray-100"
-                  />
-                </div>
+ <div>
+ <label className="input-label">Trip ID (Auto-generated)</label>
+ <input
+ type="text"
+ value={tripDetails.tripId}
+ readOnly
+ className="input-field bg-gray-100 font-mono"
+ />
+ </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="input-label">Travel Start Date *</label>
-                    <input
-                      type="date"
-                      value={tripDetails.startDate}
-                      onChange={(e) => setTripDetails(prev => ({ ...prev, startDate: e.target.value }))}
-                      className="input-field"
-                    />
-                  </div>
-                  <div>
-                    <label className="input-label">Travel End Date</label>
-                    <input
-                      type="date"
-                      value={tripDetails.endDate}
-                      readOnly
-                      className="input-field bg-gray-100"
-                    />
-                  </div>
-                </div>
+ <div>
+ <label className="input-label">Holiday Consultant</label>
+ <input
+ type="text"
+ value={tripDetails.consultantName}
+ onChange={(e) => setTripDetails(prev => ({ ...prev, consultantName: e.target.value }))}
+ className="input-field"
+ placeholder="Enter consultant name"
+ />
+ </div>
+ </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="input-label">No. of Adults</label>
-                    <input
-                      type="number"
-                      min={1}
-                      value={tripDetails.adults}
-                      onChange={(e) => setTripDetails(prev => ({ ...prev, adults: parseInt(e.target.value) || 1 }))}
-                      className="input-field"
-                    />
-                  </div>
-                  <div>
-                    <label className="input-label">No. of Kids</label>
-                    <input
-                      type="number"
-                      min={0}
-                      value={tripDetails.kids}
-                      onChange={(e) => setTripDetails(prev => ({ ...prev, kids: parseInt(e.target.value) || 0 }))}
-                      className="input-field"
-                    />
-                  </div>
-                </div>
+ {/* Travel Details Section */}
+ <div className="card space-y-4">
+ <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+ <Calendar className="w-5 h-5 text-primary-600" />
+ Travel Details
+ </h3>
 
-                <div>
-                  <label className="input-label">Holiday Consultant *</label>
-                  <select
-                    value={tripDetails.consultantId}
-                    onChange={(e) => setTripDetails(prev => ({ ...prev, consultantId: e.target.value }))}
-                    className="input-field"
-                  >
-                    <option value="">Select consultant</option>
-                    {agents?.map((agent: User) => (
-                      <option key={agent.id} value={agent.id}>
-                        {agent.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+ <div className="grid grid-cols-2 gap-4">
+ <div>
+ <label className="input-label">Travel Start Date *</label>
+ <input
+ type="date"
+ value={tripDetails.startDate}
+ onChange={(e) => setTripDetails(prev => ({ ...prev, startDate: e.target.value }))}
+ className="input-field"
+ />
+ </div>
+ <div>
+ <label className="input-label">Travel End Date</label>
+ <input
+ type="date"
+ value={tripDetails.endDate}
+ readOnly
+ className="input-field bg-gray-100"
+ />
+ </div>
+ </div>
 
-              {/* RIGHT COLUMN */}
-              <div className="card space-y-4">
-                <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                  <Calculator className="w-5 h-5 text-primary-600" />
-                  Pricing & Costs
-                </h3>
+ <div className="grid grid-cols-2 gap-4">
+ <div>
+ <label className="input-label">No. of Adults</label>
+ <input
+ type="number"
+ min={1}
+ value={tripDetails.adults}
+ onChange={(e) => setTripDetails(prev => ({ ...prev, adults: parseInt(e.target.value) || 1 }))}
+ className="input-field"
+ />
+ </div>
+ <div>
+ <label className="input-label">No. of Kids</label>
+ <input
+ type="number"
+ min={0}
+ value={tripDetails.kids}
+ onChange={(e) => setTripDetails(prev => ({ ...prev, kids: parseInt(e.target.value) || 0 }))}
+ className="input-field"
+ />
+ </div>
+ </div>
 
-                <div>
-                  <label className="input-label">Hotel Category</label>
-                  <div className="flex gap-4">
-                    {['3', '4', '5'].map((cat) => (
-                      <label key={cat} className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="hotelCategory"
-                          value={cat}
-                          checked={tripDetails.hotelCategory === cat}
-                          onChange={(e) => setTripDetails(prev => ({ ...prev, hotelCategory: e.target.value as '3' | '4' | '5' }))}
-                          className="w-4 h-4 text-primary-600"
-                        />
-                        <span className="flex items-center gap-1">
-                          {Array.from({ length: parseInt(cat) }).map((_, i) => (
-                            <Flame key={i} className="w-4 h-4 text-yellow-500" />
-                          ))}
-                          <span className="ml-1 text-sm">Star</span>
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
+ {/* Kids Breakdown - Only visible if kids > 0 */}
+ {tripDetails.kids > 0 && (
+ <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
+ <h4 className="font-medium text-orange-800 mb-3">Child Details (Total: {tripDetails.kids})</h4>
+ <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+ <div>
+ <label className="input-label text-xs">Under 5 (Free: 0%)</label>
+ <input
+ type="number"
+ min={0}
+ max={tripDetails.kids}
+ value={tripDetails.kidsUnder5}
+ onChange={(e) => {
+ const val = parseInt(e.target.value) || 0;
+ const total = tripDetails.kidsUnder5 + tripDetails.kids5to10Sharing + tripDetails.kids5to10ExtraBed + tripDetails.kids11plus;
+ if (val + total - tripDetails.kidsUnder5 <= tripDetails.kids) {
+ setTripDetails(prev => ({ ...prev, kidsUnder5: val }));
+ }
+ }}
+ className="input-field"
+ placeholder="0"
+ />
+ </div>
+ <div>
+ <label className="input-label text-xs">Age 5-10 (Sharing: 60%)</label>
+ <input
+ type="number"
+ min={0}
+ max={tripDetails.kids}
+ value={tripDetails.kids5to10Sharing}
+ onChange={(e) => {
+ const val = parseInt(e.target.value) || 0;
+ const total = tripDetails.kidsUnder5 + tripDetails.kids5to10Sharing + tripDetails.kids5to10ExtraBed + tripDetails.kids11plus;
+ if (val + total - tripDetails.kids5to10Sharing <= tripDetails.kids) {
+ setTripDetails(prev => ({ ...prev, kids5to10Sharing: val }));
+ }
+ }}
+ className="input-field"
+ placeholder="0"
+ />
+ </div>
+ <div>
+ <label className="input-label text-xs">Age 5-10 (Extra Bed: 85%)</label>
+ <input
+ type="number"
+ min={0}
+ max={tripDetails.kids}
+ value={tripDetails.kids5to10ExtraBed}
+ onChange={(e) => {
+ const val = parseInt(e.target.value) || 0;
+ const total = tripDetails.kidsUnder5 + tripDetails.kids5to10Sharing + tripDetails.kids5to10ExtraBed + tripDetails.kids11plus;
+ if (val + total - tripDetails.kids5to10ExtraBed <= tripDetails.kids) {
+ setTripDetails(prev => ({ ...prev, kids5to10ExtraBed: val }));
+ }
+ }}
+ className="input-field"
+ placeholder="0"
+ />
+ </div>
+ <div>
+ <label className="input-label text-xs">Age 11+ (Adult Rate: 100%)</label>
+ <input
+ type="number"
+ min={0}
+ max={tripDetails.kids}
+ value={tripDetails.kids11plus}
+ onChange={(e) => {
+ const val = parseInt(e.target.value) || 0;
+ const total = tripDetails.kidsUnder5 + tripDetails.kids5to10Sharing + tripDetails.kids5to10ExtraBed + tripDetails.kids11plus;
+ if (val + total - tripDetails.kids11plus <= tripDetails.kids) {
+ setTripDetails(prev => ({ ...prev, kids11plus: val }));
+ }
+ }}
+ className="input-field"
+ placeholder="0"
+ />
+ </div>
+ </div>
+ </div>
+ )}
 
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-600">DMC Land Cost (USD)</span>
-                    <span className="font-semibold">
-                      Per person: ${landCost.perPerson} | Total: ${landCost.total}
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    Based on {tripDetails.adults} adults + {tripDetails.kids} kids (50% rate)
-                  </div>
-                </div>
+ {/* Hotel Category */}
+ <div>
+ <label className="input-label">Hotel Category</label>
+ <div className="flex gap-6">
+ {['3', '4', '5'].map((cat) => (
+ <label key={cat} className="flex items-center gap-2 cursor-pointer">
+ <input
+ type="radio"
+ name="hotelCategory"
+ value={cat}
+ checked={tripDetails.hotelCategory === cat}
+ onChange={(e) => setTripDetails(prev => ({ ...prev, hotelCategory: e.target.value as '3' | '4' | '5' }))}
+ className="w-4 h-4 text-primary-600"
+ />
+ <span className="flex items-center gap-1">
+ {Array.from({ length: parseInt(cat) }).map((_, i) => (
+ <Flame key={i} className="w-4 h-4 text-yellow-500" />
+ ))}
+ <span className="ml-1 text-sm font-medium">{cat}★ Hotel</span>
+ </span>
+ </label>
+ ))}
+ </div>
+ </div>
+ </div>
+ </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="input-label">Forex Rate (USD to INR)</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={tripDetails.forexRate}
-                      onChange={(e) => setTripDetails(prev => ({ ...prev, forexRate: parseFloat(e.target.value) || 0 }))}
-                      className="input-field"
-                      placeholder="84.50"
-                    />
-                  </div>
-                  <div>
-                    <label className="input-label">Forex Charges %</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={tripDetails.forexCharges}
-                      onChange={(e) => setTripDetails(prev => ({ ...prev, forexCharges: parseFloat(e.target.value) || 0 }))}
-                      className="input-field"
-                      placeholder="2.5"
-                    />
-                  </div>
-                </div>
+ {/* === RIGHT COLUMN: Cost Breakdown === */}
+ <div className="space-y-6">
+ {/* Section 1: Hotels (Land Package) */}
+ <div className="card space-y-4">
+ <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+ <Building2 className="w-5 h-5 text-blue-600" />
+ 🏨 HOTELS (Land Package)
+ </h3>
 
-                <div className="p-4 bg-primary-50 rounded-lg">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-700">Land Cost (INR)</span>
-                    <span className="font-semibold text-lg">₹ {landCostInr.toLocaleString()}</span>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    ${landCost.total} × {tripDetails.forexRate} × {1 + tripDetails.forexCharges/100}
-                  </div>
-                </div>
+ <div className="grid grid-cols-2 gap-4">
+ <div>
+ <label className="input-label">DMC Cost per Adult (USD)</label>
+ <input
+ type="number"
+ step="1"
+ value={tripDetails.dmcCostPerAdult}
+ onChange={(e) => setTripDetails(prev => ({ ...prev, dmcCostPerAdult: parseFloat(e.target.value) || 0 }))}
+ className="input-field"
+ placeholder="650"
+ />
+ </div>
+ <div>
+ <label className="input-label">USD to INR Rate</label>
+ <input
+ type="number"
+ step="0.01"
+ value={tripDetails.usdToInrRate}
+ onChange={(e) => setTripDetails(prev => ({ ...prev, usdToInrRate: parseFloat(e.target.value) || 85.50 }))}
+ className="input-field"
+ placeholder="85.50"
+ />
+ </div>
+ </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="input-label">Visa Charges (INR)</label>
-                    <input
-                      type="number"
-                      value={tripDetails.visaCharges}
-                      onChange={(e) => setTripDetails(prev => ({ ...prev, visaCharges: parseInt(e.target.value) || 0 }))}
-                      className="input-field"
-                      placeholder="5000"
-                    />
-                  </div>
-                  <div>
-                    <label className="input-label">Insurance Charges (INR)</label>
-                    <input
-                      type="number"
-                      value={tripDetails.insuranceCharges}
-                      onChange={(e) => setTripDetails(prev => ({ ...prev, insuranceCharges: parseInt(e.target.value) || 0 }))}
-                      className="input-field"
-                      placeholder="3000"
-                    />
-                  </div>
-                </div>
+ <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+ <div className="flex justify-between items-center">
+ <span className="text-gray-700 font-medium">Hotel Total (INR)</span>
+ <span className="font-bold text-lg text-blue-700">₹ {Math.round(calculations.hotelsInr).toLocaleString()}</span>
+ </div>
+ <div className="text-xs text-gray-500 mt-1">
+ Formula: (Adults × Adult Rate + Kids Total) × Forex
+ </div>
+ </div>
+ </div>
 
-                <div>
-                  <label className="input-label">Markup (INR)</label>
-                  <input
-                    type="number"
-                    value={tripDetails.markup}
-                    onChange={(e) => setTripDetails(prev => ({ ...prev, markup: parseInt(e.target.value) || 0 }))}
-                    className="input-field"
-                    placeholder="5000"
-                  />
-                </div>
+ {/* Section 2: Activities */}
+ <div className="card space-y-3">
+ <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+ 🎯 ACTIVITIES
+ </h3>
+ <div>
+ <label className="input-label">Cost (INR)</label>
+ <input
+ type="number"
+ value={tripDetails.activitiesCost}
+ onChange={(e) => setTripDetails(prev => ({ ...prev, activitiesCost: parseInt(e.target.value) || 0 }))}
+ className="input-field"
+ placeholder="0"
+ />
+ </div>
+ <p className="text-xs text-gray-500 italic">Usually included in land package</p>
+ </div>
 
-                <div className="p-4 bg-green-50 rounded-lg border-2 border-green-200">
-                  <div className="flex justify-between items-center">
-                    <span className="text-green-800 font-medium">TOTAL QUOTE</span>
-                    <span className="text-2xl font-bold text-green-700">₹ {totalQuote.toLocaleString()}</span>
-                  </div>
-                  <div className="text-xs text-green-600 mt-1">
-                    Land Cost + Visa + Insurance + Markup
-                  </div>
-                </div>
-              </div>
-            </div>
+ {/* Section 3: Transfers */}
+ <div className="card space-y-3">
+ <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+ 🚌 TRANSFERS
+ </h3>
+ <div>
+ <label className="input-label">Cost (INR)</label>
+ <input
+ type="number"
+ value={tripDetails.transfersCost}
+ onChange={(e) => setTripDetails(prev => ({ ...prev, transfersCost: parseInt(e.target.value) || 0 }))}
+ className="input-field"
+ placeholder="0"
+ />
+ </div>
+ <p className="text-xs text-gray-500 italic">Usually included in land package</p>
+ </div>
 
-            <div className="flex justify-between">
-              <button
-                onClick={() => setStep(1)}
-                className="btn-secondary"
-              >
-                <ChevronLeft className="w-4 h-4 mr-2" />
-                Back
-              </button>
-              <button
-                onClick={() => handleStepChange(3)}
-                className="btn-primary"
-              >
-                Continue to Review
-                <ChevronRight className="w-4 h-4 ml-2" />
-              </button>
-            </div>
-          </div>
-        )}
+ {/* Section 4: Other Special Inclusions */}
+ <div className="card space-y-4">
+ <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+ ✨ OTHER SPECIAL INCLUSIONS
+ </h3>
 
-        {/* STEP 3: Review & Generate */}
-        {step === 3 && selectedTemplate && (
-          <div className="space-y-6">
-            <div className="card p-6">
-              <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2">
-                <FileText className="w-6 h-6 text-primary-600" />
-                Review Itinerary
-              </h2>
+ <div className="grid grid-cols-2 gap-4">
+ <div>
+ <label className="input-label">Visa (INR)</label>
+ <input
+ type="number"
+ value={tripDetails.visaCost}
+ onChange={(e) => setTripDetails(prev => ({ ...prev, visaCost: parseInt(e.target.value) || 0 }))}
+ className="input-field"
+ placeholder="0"
+ />
+ </div>
+ <div>
+ <label className="input-label">Travel Insurance (INR)</label>
+ <input
+ type="number"
+ value={tripDetails.travelInsurance}
+ onChange={(e) => setTripDetails(prev => ({ ...prev, travelInsurance: parseInt(e.target.value) || 0 }))}
+ className="input-field"
+ placeholder="0"
+ />
+ </div>
+ </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                {/* Template Summary */}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h3 className="font-semibold text-gray-700 mb-3">Template</h3>
-                  <div className="space-y-1">
-                    <p className="font-medium">{selectedTemplate.title}</p>
-                    <p className="text-sm text-gray-600">Code: {selectedTemplate.code}</p>
+ <div className="grid grid-cols-2 gap-4">
+ <div>
+ <label className="input-label">Arrival Visa (INR)</label>
+ <input
+ type="number"
+ value={tripDetails.arrivalVisa}
+ onChange={(e) => setTripDetails(prev => ({ ...prev, arrivalVisa: parseInt(e.target.value) || 0 }))}
+ className="input-field"
+ placeholder="0"
+ />
+ </div>
+ <div>
+ <label className="input-label">Other Label</label>
+ <input
+ type="text"
+ value={tripDetails.otherLabel}
+ onChange={(e) => setTripDetails(prev => ({ ...prev, otherLabel: e.target.value }))}
+ className="input-field"
+ placeholder="e.g. Extra Services"
+ />
+ </div>
+ </div>
+ <div>
+ <label className="input-label">Other Cost (INR)</label>
+ <input
+ type="number"
+ value={tripDetails.otherCost}
+ onChange={(e) => setTripDetails(prev => ({ ...prev, otherCost: parseInt(e.target.value) || 0 }))}
+ className="input-field"
+ placeholder="0"
+ />
+ </div>
+ </div>
+
+ {/* Section 5: Markup & Taxes */}
+ <div className="card space-y-4">
+ <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+ 📊 MARKUP & TAXES
+ </h3>
+
+ <div className="grid grid-cols-3 gap-4">
+ <div>
+ <label className="input-label">Markup %</label>
+ <input
+ type="number"
+ step="0.1"
+ value={tripDetails.markupPercent}
+ onChange={(e) => setTripDetails(prev => ({ ...prev, markupPercent: parseFloat(e.target.value) || 0 }))}
+ className="input-field"
+ placeholder="0"
+ />
+ </div>
+ <div>
+ <label className="input-label">GST %</label>
+ <input
+ type="number"
+ step="0.1"
+ value={tripDetails.gstPercent}
+ onChange={(e) => setTripDetails(prev => ({ ...prev, gstPercent: parseFloat(e.target.value) || 5 }))}
+ className="input-field"
+ placeholder="5"
+ />
+ </div>
+ <div>
+ <label className="input-label">TCS %</label>
+ <input
+ type="number"
+ step="0.1"
+ value={tripDetails.tcsPercent}
+ onChange={(e) => setTripDetails(prev => ({ ...prev, tcsPercent: parseFloat(e.target.value) || 5 }))}
+ className="input-field"
+ placeholder="5"
+ />
+ </div>
+ </div>
+ </div>
+
+ {/* === GRAND TOTAL BOX === */}
+ <div className="bg-gray-900 text-white p-6 rounded-lg shadow-lg sticky top-4">
+ <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+ <DollarSign className="w-5 h-5" />
+ QUOTE SUMMARY
+ </h3>
+
+ <div className="space-y-2 text-sm">
+ <div className="flex justify-between">
+ <span className="text-gray-400">Hotels (Land Package)</span>
+ <span className="font-medium">₹ {Math.round(calculations.hotelsInr).toLocaleString()}</span>
+ </div>
+ <div className="flex justify-between">
+ <span className="text-gray-400">Activities</span>
+ <span className="font-medium">₹ {tripDetails.activitiesCost.toLocaleString()}</span>
+ </div>
+ <div className="flex justify-between">
+ <span className="text-gray-400">Transfers</span>
+ <span className="font-medium">₹ {tripDetails.transfersCost.toLocaleString()}</span>
+ </div>
+ <div className="flex justify-between">
+ <span className="text-gray-400">Visa</span>
+ <span className="font-medium">₹ {tripDetails.visaCost.toLocaleString()}</span>
+ </div>
+ <div className="flex justify-between">
+ <span className="text-gray-400">Insurance</span>
+ <span className="font-medium">₹ {tripDetails.travelInsurance.toLocaleString()}</span>
+ </div>
+ <div className="flex justify-between">
+ <span className="text-gray-400">Arrival Visa</span>
+ <span className="font-medium">₹ {tripDetails.arrivalVisa.toLocaleString()}</span>
+ </div>
+ {tripDetails.otherCost > 0 && (
+ <div className="flex justify-between">
+ <span className="text-gray-400">{tripDetails.otherLabel || 'Other'}</span>
+ <span className="font-medium">₹ {tripDetails.otherCost.toLocaleString()}</span>
+ </div>
+ )}
+ <div className="border-t border-gray-700 my-2"></div>
+ <div className="flex justify-between">
+ <span className="text-gray-300">Subtotal</span>
+ <span className="font-medium">₹ {Math.round(calculations.subtotal).toLocaleString()}</span>
+ </div>
+ <div className="flex justify-between">
+ <span className="text-gray-400">Markup ({tripDetails.markupPercent}%)</span>
+ <span className="font-medium">₹ {Math.round(calculations.markupAmount).toLocaleString()}</span>
+ </div>
+ <div className="flex justify-between">
+ <span className="text-gray-400">GST ({tripDetails.gstPercent}%)</span>
+ <span className="font-medium">₹ {Math.round(calculations.gstAmount).toLocaleString()}</span>
+ </div>
+ <div className="flex justify-between">
+ <span className="text-gray-400">TCS ({tripDetails.tcsPercent}%)</span>
+ <span className="font-medium">₹ {Math.round(calculations.tcsAmount).toLocaleString()}</span>
+ </div>
+ <div className="border-t-2 border-white mt-3 pt-3">
+ <div className="flex justify-between text-lg font-bold">
+ <span>TOTAL</span>
+ <span className="text-green-400">₹ {Math.round(calculations.grandTotal).toLocaleString()}</span>
+ </div>
+ <div className="flex justify-between text-sm mt-1">
+ <span className="text-gray-400">Per Person</span>
+ <span className="font-semibold text-green-300">₹ {calculations.perPerson.toLocaleString()}</span>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ {/* Navigation Buttons */}
+ <div className="flex justify-between">
+ <button
+ onClick={() => setStep(1)}
+ className="btn-secondary"
+ >
+ <ChevronLeft className="w-4 h-4 mr-2" />
+ Back
+ </button>
+ <button
+ onClick={() => handleStepChange(3)}
+ className="btn-primary"
+ >
+ Continue to Review
+ <ChevronRight className="w-4 h-4 ml-2" />
+ </button>
+ </div>
+ </div>
+ )}
+
+{/* STEP 3: Review & Generate */}
+ {step === 3 && selectedTemplate && (
+ <div className="space-y-6">
+ <div className="card p-6">
+ <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2">
+ <FileText className="w-6 h-6 text-primary-600" />
+ Review Itinerary
+ </h2>
+
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+ {/* Template Summary */}
+ <div className="bg-gray-50 p-4 rounded-lg">
+ <h3 className="font-semibold text-gray-700 mb-3">Template</h3>
+ <div className="space-y-1">
+ <p className="font-medium">{selectedTemplate.title}</p>
+ <p className="text-sm text-gray-600">Code: {selectedTemplate.code}</p>
                     <p className="text-sm text-gray-600">
                       {selectedTemplate.days} Days / {selectedTemplate.nights} Nights
                     </p>
@@ -557,15 +865,16 @@ const handleStepChange = (newStep: Step) => {
                   </div>
                 </div>
 
-                {/* Customer Summary */}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h3 className="font-semibold text-gray-700 mb-3">Customer</h3>
-                  <div className="space-y-1">
-                    <p className="font-medium">{tripDetails.customerName}</p>
-                    <p className="text-sm text-gray-600">{tripDetails.customerPhone}</p>
-                    <p className="text-sm text-gray-600">Trip ID: {tripDetails.tripId}</p>
-                  </div>
-                </div>
+ {/* Customer Summary */}
+ <div className="bg-gray-50 p-4 rounded-lg">
+ <h3 className="font-semibold text-gray-700 mb-3">Customer</h3>
+ <div className="space-y-1">
+ <p className="font-medium">{tripDetails.customerName}</p>
+ <p className="text-sm text-gray-600">{tripDetails.customerPhone}</p>
+ <p className="text-sm text-gray-600">Trip ID: {tripDetails.tripId}</p>
+ <p className="text-sm text-gray-600">Consultant: {tripDetails.consultantName || 'Not specified'}</p>
+ </div>
+ </div>
 
                 {/* Travel Details */}
                 <div className="bg-gray-50 p-4 rounded-lg">
@@ -585,32 +894,64 @@ const handleStepChange = (newStep: Step) => {
                   </div>
                 </div>
 
-                {/* Pricing Summary */}
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <h3 className="font-semibold text-green-800 mb-3">Pricing Summary</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Land Cost</span>
-                      <span>₹ {landCostInr.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Visa</span>
-                      <span>₹ {tripDetails.visaCharges.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Insurance</span>
-                      <span>₹ {tripDetails.insuranceCharges.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Markup</span>
-                      <span>₹ {tripDetails.markup.toLocaleString()}</span>
-                    </div>
-                    <div className="border-t pt-2 flex justify-between font-semibold text-lg text-green-700">
-                      <span>Total Quote</span>
-                      <span>₹ {totalQuote.toLocaleString()}</span>
-                    </div>
-                  </div>
-                </div>
+ {/* Pricing Summary */}
+ <div className="bg-green-50 p-4 rounded-lg">
+ <h3 className="font-semibold text-green-800 mb-3">Pricing Summary</h3>
+ <div className="space-y-2 text-sm">
+ <div className="flex justify-between">
+ <span className="text-gray-600">Hotels (Land Package)</span>
+ <span>₹ {Math.round(calculations.hotelsInr).toLocaleString()}</span>
+ </div>
+ <div className="flex justify-between">
+ <span className="text-gray-600">Activities</span>
+ <span>₹ {tripDetails.activitiesCost.toLocaleString()}</span>
+ </div>
+ <div className="flex justify-between">
+ <span className="text-gray-600">Transfers</span>
+ <span>₹ {tripDetails.transfersCost.toLocaleString()}</span>
+ </div>
+ <div className="flex justify-between">
+ <span className="text-gray-600">Visa</span>
+ <span>₹ {tripDetails.visaCost.toLocaleString()}</span>
+ </div>
+ <div className="flex justify-between">
+ <span className="text-gray-600">Insurance</span>
+ <span>₹ {tripDetails.travelInsurance.toLocaleString()}</span>
+ </div>
+ {tripDetails.arrivalVisa > 0 && (
+ <div className="flex justify-between">
+ <span className="text-gray-600">Arrival Visa</span>
+ <span>₹ {tripDetails.arrivalVisa.toLocaleString()}</span>
+ </div>
+ )}
+ {tripDetails.otherCost > 0 && (
+ <div className="flex justify-between">
+ <span className="text-gray-600">{tripDetails.otherLabel || 'Other'}</span>
+ <span>₹ {tripDetails.otherCost.toLocaleString()}</span>
+ </div>
+ )}
+ <div className="flex justify-between">
+ <span className="text-gray-600">Markup ({tripDetails.markupPercent}%)</span>
+ <span>₹ {Math.round(calculations.markupAmount).toLocaleString()}</span>
+ </div>
+ <div className="flex justify-between">
+ <span className="text-gray-600">GST ({tripDetails.gstPercent}%)</span>
+ <span>₹ {Math.round(calculations.gstAmount).toLocaleString()}</span>
+ </div>
+ <div className="flex justify-between">
+ <span className="text-gray-600">TCS ({tripDetails.tcsPercent}%)</span>
+ <span>₹ {Math.round(calculations.tcsAmount).toLocaleString()}</span>
+ </div>
+ <div className="border-t pt-2 flex justify-between font-semibold text-lg text-green-700">
+ <span>Total Quote</span>
+ <span>₹ {Math.round(calculations.grandTotal).toLocaleString()}</span>
+ </div>
+ <div className="flex justify-between text-sm text-gray-600">
+ <span>Per Person</span>
+ <span>₹ {calculations.perPerson.toLocaleString()}</span>
+ </div>
+ </div>
+ </div>
               </div>
 
               {/* Action Buttons */}

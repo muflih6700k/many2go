@@ -144,7 +144,11 @@ export const usersApi = {
 };
 
 export const itineraryTemplatesApi = {
- getAll: () => api.get('/api/itinerary-templates'),
+ getAll: async () => {
+ const response = await api.get('/api/itinerary-templates');
+ // Handle nested response format { success: true, data: [...] }
+ return response.data?.data || response.data || [];
+ },
  getByCode: (code: string) => api.get(`/api/itinerary-templates/${code}`),
 };
 

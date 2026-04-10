@@ -44,35 +44,42 @@ const vietnamTemplates = [
   { planNum: 239, code: '239', title: 'HANOI-NINH BINH-SAPA-HALONG-DANANG-HOIAN-HO CHI MINH', days: 12, nights: 11, destination: 'Vietnam', brief: 'Ultimate North to South Vietnam journey' },
 ];
 
-async function seedVietnamTemplates() {
-  console.log('Seeding Vietnam itinerary templates...');
+async function main() {
+ // Check if already seeded
+ const count = await prisma.itineraryTemplate.count();
+ if (count > 0) {
+ console.log('Itinerary templates already seeded, skipping...');
+ return;
+ }
 
-  for (const template of vietnamTemplates) {
-    await prisma.itineraryTemplate.upsert({
-      where: { code: template.code },
-      update: {},
-      create: {
-        planNum: template.planNum,
-        code: template.code,
-        title: template.title,
-        days: template.days,
-        nights: template.nights,
-        destination: template.destination,
-        brief: template.brief,
-        itinerary: {},
-        pricingUsd: {},
-      },
-    });
-  }
+ console.log('Seeding Vietnam itinerary templates...');
 
-  console.log(`Seeded ${vietnamTemplates.length} Vietnam itinerary templates`);
+ for (const template of vietnamTemplates) {
+ await prisma.itineraryTemplate.upsert({
+ where: { code: template.code },
+ update: {},
+ create: {
+ planNum: template.planNum,
+ code: template.code,
+ title: template.title,
+ days: template.days,
+ nights: template.nights,
+ destination: template.destination,
+ brief: template.brief,
+ itinerary: {},
+ pricingUsd: {},
+ },
+ });
+ }
+
+ console.log(`Seeded ${vietnamTemplates.length} Vietnam itinerary templates`);
 }
 
-seedVietnamTemplates()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+main()
+ .catch((e) => {
+ console.error(e);
+ process.exit(1);
+ })
+ .finally(async () => {
+ await prisma.$disconnect();
+ });

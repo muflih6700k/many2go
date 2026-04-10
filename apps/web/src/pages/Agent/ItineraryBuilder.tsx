@@ -218,7 +218,7 @@ const handleStepChange = (newStep: Step) => {
  nights: selectedTemplate?.nights,
  destination: selectedTemplate?.destination || 'Vietnam',
  brief: selectedTemplate?.brief,
- itinerary: selectedTemplate?.itinerary
+ itinerary: selectedTemplate?.itinerary,
  },
  customer: {
  name: tripDetails.customerName,
@@ -228,7 +228,7 @@ const handleStepChange = (newStep: Step) => {
  startDate: tripDetails.startDate,
  endDate: tripDetails.endDate,
  adults: tripDetails.adults,
- kids: tripDetails.kids
+ kids: tripDetails.kids,
  },
  hotelCategory: tripDetails.hotelCategory,
  pricing: {
@@ -250,7 +250,8 @@ const handleStepChange = (newStep: Step) => {
  tcsAmount: calculations.tcsAmount,
  subtotal: calculations.subtotal,
  totalInr: calculations.totalInr,
- perPerson: calculations.perPerson
+ perPerson: calculations.perPerson,
+ }
  })
  });
 

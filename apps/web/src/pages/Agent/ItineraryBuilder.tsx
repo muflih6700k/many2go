@@ -199,8 +199,94 @@ const handleStepChange = (newStep: Step) => {
  setStep(newStep);
  };
 
+ const generatePDFMutation = useMutation({
+ mutationFn: async () => {
+ const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+ const token = localStorage.getItem('token');
+ 
+ const response = await fetch(`${apiUrl}/api/itinerary-templates/generate-pdf`, {
+ method: 'POST',
+ headers: {
+ 'Content-Type': 'application/json',
+ 'Authorization': `Bearer ${token}`
+ },
+ body: JSON.stringify({
+ template: {
+ code: selectedTemplate?.code,
+ title: selectedTemplate?.title,
+ days: selectedTemplate?.days,
+ nights: selectedTemplate?.nights,
+ destination: selectedTemplate?.destination || 'Vietnam',
+ brief: selectedTemplate?.brief,
+ itinerary: selectedTemplate?.itinerary
+ },
+ customer: {
+ name: tripDetails.customerName,
+ phone: tripDetails.customerPhone,
+ tripId: tripDetails.tripId,
+ consultant: tripDetails.consultantName,
+ startDate: tripDetails.startDate,
+ endDate: tripDetails.endDate,
+ adults: tripDetails.adults,
+ kids: tripDetails.kids
+ },
+ hotelCategory: tripDetails.hotelCategory,
+ pricing: {
+ hotelUsd: tripDetails.dmcCostPerAdult,
+ forexRate: tripDetails.usdToInrRate,
+ hotelInr: calculations.hotelInr,
+ activities: tripDetails.activitiesCost,
+ transfers: tripDetails.transfersCost,
+ visa: tripDetails.visaCost,
+ insurance: tripDetails.travelInsurance,
+ arrivalVisa: tripDetails.arrivalVisa,
+ other: tripDetails.otherCost,
+ otherLabel: tripDetails.otherLabel,
+ markupPercent: tripDetails.markupPercent,
+ markupAmount: calculations.markupAmount,
+ gstPercent: tripDetails.gstPercent,
+ gstAmount: calculations.gstAmount,
+ tcsPercent: tripDetails.tcsPercent,
+ tcsAmount: calculations.tcsAmount,
+ subtotal: calculations.subtotal,
+ totalInr: calculations.totalInr,
+ perPerson: calculations.perPerson
+ })
+ });
+
+ if (!response.ok) {
+ const error = await response.json();
+ throw new Error(error.error || 'Failed to generate PDF');
+ }
+
+ return response.blob();
+ },
+ onSuccess: (blob) => {
+ const url = window.URL.createObjectURL(blob);
+ const link = document.createElement('a');
+ link.href = url;
+ link.download = `MANY2GO-${tripDetails.tripId}-${tripDetails.customerName.replace(/\s+/g, '_')}.pdf`;
+ document.body.appendChild(link);
+ link.click();
+ document.body.removeChild(link);
+ window.URL.revokeObjectURL(url);
+ toast.success('PDF downloaded successfully!');
+ },
+ onError: (error) => {
+ toast.error(`Failed to generate PDF: ${error.message}`);
+ }
+ });
+
  const handleGeneratePDF = () => {
- toast('PDF Generation - Coming in Phase 2');
+ if (!selectedTemplate) {
+ toast.error('Please select a template first');
+ return;
+ }
+ if (!tripDetails.customerName) {
+ toast.error('Please enter customer name');
+ return;
+ }
+ generatePDFMutation.mutate();
  };
 
  const handleSaveDraft = () => {
@@ -956,13 +1042,23 @@ const handleStepChange = (newStep: Step) => {
 
               {/* Action Buttons */}
               <div className="flex flex-wrap gap-4">
-                <button
-                  onClick={handleGeneratePDF}
-                  className="btn-primary flex-1 min-w-[200px]"
-                >
-                  <FileText className="w-4 h-4 mr-2" />
-                  Generate PDF
-                </button>
+ <button
+ onClick={handleGeneratePDF}
+ disabled={generatePDFMutation.isPending}
+ className="btn-primary flex-1 min-w-[200px]"
+ >
+ {generatePDFMutation.isPending ? (
+ <>
+ <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
+ Generating...
+ </>
+ ) : (
+ <>
+ <FileText className="w-4 h-4 mr-2" />
+ Generate PDF
+ </>
+ )}
+ </button>
                 <button
                   onClick={handleSaveDraft}
                   className="btn-secondary flex-1 min-w-[200px]"
